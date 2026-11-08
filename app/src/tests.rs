@@ -164,3 +164,19 @@ fn a_rescan_keeps_the_selected_game_selected() {
 fn the_tray_icon_decodes_from_the_app_icon() {
     assert!(background::tray_icon().is_some());
 }
+
+#[test]
+fn losing_focus_hides_only_a_window_that_had_focus() {
+    let mut rt = runtime();
+    rt.state.resident = true;
+    rt.state.query.text = "fort".into();
+    rt.update(|state, tx| state::on_focus(state, false, tx));
+    assert_eq!(
+        rt.state.query.text, "fort",
+        "an unfocused launch is not a click-away"
+    );
+    rt.update(|state, tx| state::on_focus(state, true, tx));
+    assert!(rt.state.focused);
+    rt.update(|state, tx| state::on_focus(state, false, tx));
+    assert!(!rt.state.focused);
+}

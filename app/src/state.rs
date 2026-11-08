@@ -31,6 +31,9 @@ pub(crate) struct State {
     pub notice: Option<String>,
     pub tray: Option<rune::Tray>,
     pub last_scan: Option<Instant>,
+    /// Whether the window has had focus since it was last shown. Only losing focus it had
+    /// hides it: Windows may show a launched window without focus, and that is no click-away.
+    pub focused: bool,
 }
 
 impl Default for State {
@@ -58,6 +61,7 @@ impl Default for State {
             notice: None,
             tray: None,
             last_scan: None,
+            focused: false,
         }
     }
 }
@@ -106,6 +110,7 @@ impl State {
             return;
         };
         crate::platform::place_for_summon();
+        self.focused = false;
         handle.open();
         if self.last_scan.is_none_or(|at| at.elapsed() >= RESCAN_AFTER) {
             self.refresh();
@@ -126,6 +131,7 @@ impl State {
         if let Some(&index) = self.results.first() {
             tx.scroll_into_view(format!("game-{index}"));
         }
+        self.focused = false;
         if let Some(handle) = &self.handle {
             handle.hide();
         }
@@ -298,7 +304,8 @@ fn is_subsequence(query: &str, title: &str) -> bool {
 
 /// Background mode: clicking away hides the launcher, as a command palette does.
 pub(crate) fn on_focus(state: &mut State, focused: bool, tx: &mut Tx) {
-    if !focused && state.handle.as_ref().is_some_and(|h| h.is_visible()) {
+    let had_focus = std::mem::replace(&mut state.focused, focused);
+    if had_focus && !focused && state.handle.as_ref().is_some_and(|h| h.is_visible()) {
         state.dismiss(tx);
     }
 }
