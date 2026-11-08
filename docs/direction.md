@@ -15,7 +15,7 @@ save-folder focus). Planetes competes on easy installation, store coverage, laun
 The unpublished v0.1.0 draft was cancelled on 2026-11-07. Public releases restart at v0.1.0 or v0.2.0, the owner's
 choice, once background mode lands. Agreed v1.0 scope, delivered incrementally:
 
-1. **Background mode (next):** Planetes stays resident and a global hotkey summons it. The hotkey is configurable;
+1. **Background mode (implemented 2026-11-07):** Planetes stays resident and a global hotkey summons it. The hotkey is configurable;
    Alt+Space is the default. The window hides when it loses focus or after a launch, a tray icon offers rescan,
    settings and quit, and starting with Windows is optional.
 2. **More stores:** as many as each adds without complicating the implementation, one store at a time. Candidates:
@@ -111,7 +111,7 @@ Release startup and search have now been measured with an opt-in native benchmar
 the library is available shortly after the first rendered frame. Windows packaging includes icon/version resources,
 single-instance behavior, dependency notices and a checksum. See [Releasing](releasing.md) for the draft workflow.
 
-1. Implement background mode (roadmap item 1).
+1. Verify the tray menu and Start with Windows by hand; background mode is otherwise checked natively.
 2. Extend store coverage in small increments without expanding the main interaction.
 3. Keep releases drafted and the repository private until the owner approves publication and a visibility change.
 

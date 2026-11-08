@@ -3,8 +3,9 @@
 A minimal quick launcher for installed games (Steam, Epic, GOG, Battle.net, …), built in Rust with
 [Rune](https://github.com/anomalyco/rune), Anomaly's pre-release GPU UI framework. Apps pin a rev of Rune's `dev` branch.
 
-Status: frameless, neutral/blue Rune launcher (redesigned 2026-11-07), background scanning, local game icons, Steam
-type filtering and Steam/Epic launch handoff implemented. Read `README.md` for commands
+Status: frameless, neutral/blue Rune launcher (redesigned 2026-11-07) running in background mode (tray, configurable
+global hotkey in `%APPDATA%\Planetes\settings.json`, hide on focus loss, optional autostart), background scanning,
+local game icons, Steam type filtering and Steam/Epic launch handoff implemented. Read `README.md` for commands
 and scanner limitations, then `docs/direction.md`, `docs/research/` and `docs/windows-build-check.md`.
 
 The user has validated successful startup of both Steam and Epic games on this desktop.
@@ -31,8 +32,9 @@ easy installation, store coverage, launch reliability and speed rather than on s
 
 ## Next steps
 
-1. Background mode: resident app, configurable global hotkey (default Alt+Space), hide on focus loss, tray icon,
-   optional autostart. v1.0 scope is in `docs/direction.md`. The v0.1.0 draft was cancelled; releases restart at
+1. Background mode is implemented (default hotkey Alt+Space; PowerToys holds it on this desktop, so the user sets
+   another). Still unverified by hand: tray menu items and Start with Windows. Next: more stores. v1.0 scope is in
+   `docs/direction.md`. The v0.1.0 draft was cancelled; releases restart at
    v0.1.0 or v0.2.0. Keep releases drafted and the repo private until the owner approves publication and a
    visibility change. See `docs/releasing.md`.
 2. Release startup/search have been measured with the opt-in native benchmark; avoid adding caching without evidence.

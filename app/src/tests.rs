@@ -111,3 +111,56 @@ fn escape_and_successful_handoff_request_quit_but_errors_do_not() {
     rt.update(|state, tx| state.finish_launch(Err("failed".into()), tx));
     assert_eq!(rt.shell_request, None);
 }
+
+#[test]
+fn settings_default_the_hotkey_and_reject_malformed_values() {
+    use background::{DEFAULT_HOTKEY, hotkey_from_json, hotkey_label};
+    assert_eq!(hotkey_from_json("{}").unwrap(), DEFAULT_HOTKEY);
+    assert_eq!(
+        hotkey_from_json(r#"{"hotkey": " Ctrl+Alt+Space "}"#).unwrap(),
+        "ctrl+alt+space"
+    );
+    assert!(hotkey_from_json(r#"{"hotkey": 3}"#).is_err());
+    assert!(hotkey_from_json("{hotkey").is_err());
+    assert_eq!(hotkey_label("ctrl+alt+space"), "Ctrl+Alt+Space");
+    assert!("alt+space".parse::<rune::Shortcut>().is_ok());
+}
+
+#[test]
+fn resident_escape_resets_the_search_instead_of_quitting() {
+    let mut rt = runtime();
+    rt.state.resident = true;
+    key(&mut rt, Key::Text("fort".into()));
+    assert_eq!(rt.state.results.len(), 1);
+    key(&mut rt, Key::Escape);
+    assert_eq!(rt.shell_request, None);
+    assert!(rt.state.query.text.is_empty());
+    assert_eq!(rt.state.results.len(), rt.state.games.len());
+    rt.update(|state, tx| state.finish_launch(Ok(()), tx));
+    assert_eq!(rt.shell_request, None);
+}
+
+#[test]
+fn a_rescan_keeps_the_selected_game_selected() {
+    let mut rt = runtime();
+    key(&mut rt, Key::Down);
+    key(&mut rt, Key::Down);
+    let before = rt.state.games[rt.state.results[rt.state.selected]]
+        .title
+        .clone();
+    let mut again = State::default();
+    fixtures::library(&mut again);
+    let mut games = again.games;
+    games.reverse();
+    rt.state.apply_report(planetes_core::ScanReport {
+        games,
+        warnings: Vec::new(),
+    });
+    let after = &rt.state.games[rt.state.results[rt.state.selected]].title;
+    assert_eq!(*after, before);
+}
+
+#[test]
+fn the_tray_icon_decodes_from_the_app_icon() {
+    assert!(background::tray_icon().is_some());
+}

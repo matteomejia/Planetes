@@ -37,15 +37,28 @@ cargo test --locked --workspace
 cargo clippy --locked --workspace --all-targets -- -D warnings
 ```
 
-Type to search; Up/Down selects, Enter or a click launches, and Escape exits. Ctrl+R (or clicking the status-line hint) rescans. The window has no title bar: it opens centred, and dragging an empty part of the search or status bar moves it.
-The app exits after the OS accepts a launch request and keeps errors visible on failure. This is a handoff to the
-store client, not confirmation that the game started. No tray process, login, cover service or playtime tracker is used.
+Planetes stays running in the background with a tray icon. A global hotkey (Alt+Space by default) summons it on
+the monitor under the pointer; pressing it again, Escape, or clicking away hides it. Type to search; Up/Down selects,
+Enter or a click launches. Ctrl+R (or clicking the status-line hint) rescans, and a summon rescans when the library is
+over a minute old. The window has no title bar; dragging an empty part of the search or status bar moves it.
+The tray menu offers Rescan, Start with Windows (a `--background` entry under `HKCU\...\Run`), Edit settings and Quit.
+
+Settings live in `%APPDATA%\Planetes\settings.json` and apply when the file is saved:
+
+```json
+{ "hotkey": "ctrl+alt+space" }
+```
+
+If the hotkey is taken (PowerToys uses Alt+Space for Command Palette or Run), the window says so; the tray icon and
+launching Planetes again still open it. Planetes hides after the OS accepts a launch request and keeps errors visible
+on failure. This is a handoff to the store client, not confirmation that the game started. No login, cover service
+or playtime tracker is used.
 
 The neutral grey UI uses one blue accent, local Steam icon caches and Epic executable icons, with letter fallbacks.
 Icon reads and extraction run on Rune's image workers, retaining at most 128 64px icon rasters (about 2 MiB plus
 mip levels). No artwork is downloaded. Selection and hover transitions respect the system's reduced-motion setting;
 search results update immediately. Steam and Epic game startup have been validated on Windows.
-Repeated application launches focus the existing window.
+Launching Planetes again while it runs shows the existing window.
 
 The scanner reads launcher metadata and checks install directories. It does not log in, contact store APIs, launch
 games, or modify launcher files. Redirect stdout to save the JSON; keep machine-specific results in `artifacts/`

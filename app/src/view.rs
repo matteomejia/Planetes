@@ -30,6 +30,19 @@ pub(crate) fn view(s: &State, _cx: &mut Cx<State>) -> El {
             ),
         );
     }
+    if let Some(notice) = &s.notice {
+        body = body.child(hairline()).child(
+            row().w_full().px(18.0).py(8.0).child(
+                text(notice.clone())
+                    .wrap()
+                    .key("notice")
+                    .font(SMALL)
+                    .color(p.muted)
+                    .grow(1.0)
+                    .min_w(0.0),
+            ),
+        );
+    }
     body.child(hairline()).child(status(s))
 }
 
@@ -57,7 +70,7 @@ fn search(s: &State) -> El {
             match event.key {
                 Key::Up => state.move_selection(-1, tx),
                 Key::Down => state.move_selection(1, tx),
-                Key::Escape => tx.quit(),
+                Key::Escape => state.dismiss(tx),
                 _ => return false,
             }
             true
