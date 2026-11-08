@@ -31,8 +31,10 @@ easy installation, store coverage, launch reliability and speed rather than on s
 
 ## Next steps
 
-1. Agree the v1.0 scope (see `docs/direction.md`). Keep GitHub releases drafted and the repo private until the owner
-   approves publication and a visibility change. See `docs/releasing.md`.
+1. Background mode: resident app, configurable global hotkey (default Alt+Space), hide on focus loss, tray icon,
+   optional autostart. v1.0 scope is in `docs/direction.md`. The v0.1.0 draft was cancelled; releases restart at
+   v0.1.0 or v0.2.0. Keep releases drafted and the repo private until the owner approves publication and a
+   visibility change. See `docs/releasing.md`.
 2. Release startup/search have been measured with the opt-in native benchmark; avoid adding caching without evidence.
 3. Add stores incrementally while preserving the minimal search-and-launch interaction.
 4. After the app's v1.0: a Command Palette extension over the same scanner.

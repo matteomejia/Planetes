@@ -5,7 +5,27 @@
 A minimal, fast game launcher. Open it, find an installed game, launch it, and return to playing.
 The user should spend only a few seconds in Planetes. Windows is the primary platform; keep macOS compiling.
 
-## First usable milestone
+## Goal and roadmap
+
+Ship a public v1.0 that wins users, stars and downloads: **the standalone app first, then a PowerToys Command
+Palette extension** over the same scanner. The main competitor is [Ludex](https://github.com/Leocadio94/ludex)
+(MIT, C#; Steam, GOG, Epic and Xbox for Flow Launcher, Raycast and a source-only Command Palette build, with a
+save-folder focus). Planetes competes on easy installation, store coverage, launch reliability and speed.
+
+The unpublished v0.1.0 draft was cancelled on 2026-11-07. Public releases restart at v0.1.0 or v0.2.0, the owner's
+choice, once background mode lands. Agreed v1.0 scope, delivered incrementally:
+
+1. **Background mode (next):** Planetes stays resident and a global hotkey summons it. The hotkey is configurable;
+   Alt+Space is the default. The window hides when it loses focus or after a launch, a tray icon offers rescan,
+   settings and quit, and starting with Windows is optional.
+2. **More stores:** as many as each adds without complicating the implementation, one store at a time. Candidates:
+   GOG, Xbox/Game Pass, Battle.net, EA app, Ubisoft Connect, Amazon Games, itch.io and manual entries.
+3. **Better results:** recently launched first, pinned favourites, merged duplicates across stores.
+4. **Per-game actions:** open install folder, open store page, uninstall through the store, from the keyboard.
+5. **Distribution:** installer and portable ZIP on WinGet, an opt-in update check, an ARM64 build.
+6. **Launch:** README with a GIF and launch posts.
+
+## First usable milestone (done)
 
 Build one complete Steam/Epic launch flow on top of the existing scanner:
 
@@ -45,8 +65,7 @@ respect reduced-motion preferences. Avoid artwork downloads and additional navig
 - Startup, search responsiveness, keyboard navigation and reliable launch handoff take priority.
 - A simple list is the initial interface. Cover galleries, detail pages, sidebars, collections, playtime tracking,
   rich metadata and artwork services are deferred. The 5,000-cover grid spike is no longer a prerequisite.
-- Start as an ordinary desktop app. Tray residency, a global shortcut and autostart can follow if useful; they are
-  not required for the first usable version.
+- Background mode (tray residency, a configurable global shortcut, optional autostart) is the next milestone.
 - Cache discovery only when needed to keep startup immediate; avoid committing to SQLite or a background service
   before the launch flow needs them.
 - No controller/gamepad support yet. Linux comes later.
@@ -61,9 +80,8 @@ Keep source identities scoped to their stores. A launch plan should retain the i
 verify Steam and Epic launch formats before implementation rather than relying on the research notes' guesses.
 Do not run arbitrary executable strings from manifests through a shell.
 
-A future PowerToys Command Palette extension is an option the user is considering. Preserve the existing separation
-between the UI and shared discovery/launch logic so another frontend can reuse it. No extension implementation,
-plugin framework, IPC service or PowerToys dependency is required now.
+A PowerToys Command Palette extension follows the app's v1.0. Preserve the separation between the UI and shared
+discovery/launch logic so it can reuse them, for example through the CLI's JSON output.
 
 Rune is pinned to the revision verified in [the Windows build check](windows-build-check.md). Test UI states with
 fixture libraries, element-tree assertions and headless renders. Store parsers retain synthetic fixture tests;
@@ -93,8 +111,9 @@ Release startup and search have now been measured with an opt-in native benchmar
 the library is available shortly after the first rendered frame. Windows packaging includes icon/version resources,
 single-instance behavior, dependency notices and a checksum. See [Releasing](releasing.md) for the draft workflow.
 
-1. Complete private release-candidate validation and CI, then obtain approval to publish and change visibility.
+1. Implement background mode (roadmap item 1).
 2. Extend store coverage in small increments without expanding the main interaction.
+3. Keep releases drafted and the repository private until the owner approves publication and a visibility change.
 
 The earlier broad library-browser proposal is superseded by this minimal direction. The research documents remain
 references for store formats and framework capabilities, not a commitment to their full feature lists.
