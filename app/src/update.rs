@@ -2,7 +2,7 @@
 //! Releases. A copy run from `cargo run` or an unpacked v0.1 ZIP isn't installed and never
 //! checks. An update downloads in the background and applies while the launcher is hidden,
 //! restarting Planetes in background mode.
-use crate::{background, platform, state::State};
+use crate::{background, state::State};
 use rune::{AppHandle, Tx};
 use std::time::Duration;
 use velopack::{UpdateCheck, UpdateManager, VelopackApp, VelopackAsset, sources::AutoSource};
@@ -15,12 +15,13 @@ const CHECK_EVERY: Duration = Duration::from_secs(24 * 60 * 60);
 /// Velopack's install, update and uninstall hooks. Runs first in `main`: during those steps it
 /// may handle the call and exit, and at start-up it applies an update already downloaded.
 pub fn startup() {
-    VelopackApp::build()
-        // The Run value would otherwise point at the removed executable.
-        .on_before_uninstall_fast_callback(|_| {
-            let _ = platform::set_autostart(false);
-        })
-        .run();
+    let app = VelopackApp::build();
+    // The Run value would otherwise point at the removed executable. (A Windows-only hook.)
+    #[cfg(windows)]
+    let app = app.on_before_uninstall_fast_callback(|_| {
+        let _ = crate::platform::set_autostart(false);
+    });
+    app.run();
 }
 
 /// An update downloaded and ready to apply.
