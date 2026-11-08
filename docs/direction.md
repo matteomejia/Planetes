@@ -12,8 +12,8 @@ Palette extension** over the same scanner. The main competitor is [Ludex](https:
 (MIT, C#; Steam, GOG, Epic and Xbox for Flow Launcher, Raycast and a source-only Command Palette build, with a
 save-folder focus). Planetes competes on easy installation, store coverage, launch reliability and speed.
 
-The unpublished v0.1.0 draft was cancelled on 2026-11-07. Public releases restart at v0.1.0 or v0.2.0, the owner's
-choice, once background mode lands. Agreed v1.0 scope, delivered incrementally:
+v0.1.0, with background mode and Steam and Epic support, was released on 2026-11-08 (the repository is still
+private). Agreed v1.0 scope, delivered incrementally:
 
 1. **Background mode (implemented 2026-11-07):** Planetes stays resident and a global hotkey summons it. The hotkey is configurable;
    Alt+Space is the default. The window hides when it loses focus or after a launch, a tray icon offers rescan,
@@ -104,16 +104,16 @@ validated successful startup of both Steam and Epic games on this desktop. The C
 `cargo run` opens the app.
 
 The neutral/blue redesign is implemented: local icon tiles with letter fallbacks, flat selection and hover, and
-distinct focus rings. The library, loading, empty and error scenes have been rendered headlessly and inspected;
-native Windows behaviour still needs a manual check.
+distinct focus rings. The library, loading, empty and error scenes have been rendered headlessly and inspected
+and checked natively on Windows.
 
 Release startup and search have now been measured with an opt-in native benchmark. Caching remains deferred;
 the library is available shortly after the first rendered frame. Windows packaging includes icon/version resources,
 single-instance behavior, dependency notices and a checksum. See [Releasing](releasing.md) for the draft workflow.
 
-1. Verify the tray menu and Start with Windows by hand; background mode is otherwise checked natively.
-2. Extend store coverage in small increments without expanding the main interaction.
-3. Keep releases drafted and the repository private until the owner approves publication and a visibility change.
+1. Extend store coverage in small increments without expanding the main interaction, starting with GOG.
+2. Draft each release and publish it only with the owner's approval; keep the repository private until the owner
+   approves a visibility change.
 
 The earlier broad library-browser proposal is superseded by this minimal direction. The research documents remain
 references for store formats and framework capabilities, not a commitment to their full feature lists.

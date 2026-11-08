@@ -32,11 +32,10 @@ easy installation, store coverage, launch reliability and speed rather than on s
 
 ## Next steps
 
-1. Background mode is implemented (default hotkey Alt+Space; PowerToys holds it on this desktop, so the user sets
-   another). Still unverified by hand: tray menu items and Start with Windows. Next: more stores. v1.0 scope is in
-   `docs/direction.md`. The v0.1.0 draft was cancelled; releases restart at
-   v0.1.0 or v0.2.0. Keep releases drafted and the repo private until the owner approves publication and a
-   visibility change. See `docs/releasing.md`.
+1. v0.1.0 (background mode, Steam and Epic) was published on 2026-11-08 after the user tested it, tray menu
+   included. Default hotkey Alt+Space; PowerToys holds it on this desktop, so the user sets another. Next: more
+   stores (GOG first). v1.0 scope is in `docs/direction.md`. The repo stays private until the owner approves a
+   visibility change; draft each release and publish only with the owner's approval. See `docs/releasing.md`.
 2. Release startup/search have been measured with the opt-in native benchmark; avoid adding caching without evidence.
 3. Add stores incrementally while preserving the minimal search-and-launch interaction.
 4. After the app's v1.0: a Command Palette extension over the same scanner.

@@ -20,8 +20,8 @@ release. An existing draft can be edited on the Releases page. If its source cha
 before publication, and make sure its target still matches the tested source commit.
 
 Repository visibility is a separate decision. A published release in a private repository remains private to people
-with repository access. Making the repository public exposes its source history and published releases. For v0.1,
-keep the repository private and the release drafted until the owner approves publication and the visibility change.
+with repository access. Making the repository public exposes its source history and published releases. Keep the
+repository private until the owner approves the visibility change.
 
 See GitHub's [release documentation](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
 and [repository visibility documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
