@@ -1,0 +1,14 @@
+"AppState"
+{
+    "appid" "100"
+    "name" "Fixture Game"
+    "StateFlags" "4"
+    "installdir" "FixtureGame"
+    "LastUpdated" "1700000000"
+    "SizeOnDisk" "1024"
+    "InstalledDepots"
+    {
+        "101" { "manifest" "123456789" "size" "1024" }
+    }
+    "UserConfig" { "language" "english" }
+}

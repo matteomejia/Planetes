@@ -1,0 +1,12 @@
+{
+    "DisplayName": "Fixture Game",
+    "AppName": "fixture-app",
+    "InstallLocation": "REPLACED_IN_TEST",
+    "LaunchExecutable": "Game/Binaries/Win64/Game.exe",
+    "CatalogNamespace": "fixture-namespace",
+    "CatalogItemId": "fixture-catalog-id",
+    "bIsIncompleteInstall": false,
+    "bIsApplication": true,
+    "bIsExecutable": true,
+    "AppCategories": ["games", "applications"]
+}

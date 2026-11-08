@@ -3,6 +3,35 @@
 *Researched 2026-11-07. Paths, endpoints and URI formats marked **(verify)** come from memory or from other projects'
 code. Check each one against a real install before building on it. Stores change these without notice.*
 
+## Windows detection spike (2026-11-07)
+
+Implemented in `crates/stores` with a JSON CLI in `crates/cli`. Verified the Steam registry entry, modern
+`libraryfolders.vdf` and app manifests across two local libraries, and both Epic paths listed below against real
+installs. The scanner uses Epic's `.item` files, not the installation summary. Fortnite's separate content manifests
+have `bIsApplication=false`, `bIsExecutable=false`, hidden categories and no launch executable; these are excluded.
+
+Steam soundtrack/bonus-content manifests can resolve under `steamapps/music` instead of `steamapps/common`. These
+are skipped when there is no matching common-directory install. Game-type metadata is still needed to exclude
+software and shared redistributables. The launcher implementation now reads local `appinfo.vdf` types for this filter,
+with synthetic v40/v41 fixtures and fallback discovery when the cache is missing or corrupt.
+
+Steam launch URIs were checked against desktop game shortcuts. Epic uses the documented namespace, catalog item ID
+and artifact/app name combination from its manifests, percent-encoded into the URI. See Epic's
+[Protocol Activation guide](https://assets-unreal2-epic-prod-us2.s3.dualstack.us-east-1.amazonaws.com/original/4X/f/c/4/fc4342c50e1a0abf34943e019ee90bacccc62950.pdf).
+Windows handoff uses protocol-association lookup and ShellExecuteExW with COM initialization and synchronous
+activation, reporting errors in Planetes. The user has validated successful Steam and Epic startup. Playtime and
+non-Windows paths remain unverified.
+
+Local icon discovery prefers Steam's `common.clienticon` hash (falling back to `common.icon`) under `steam/games`.
+Only valid 40-character hex hashes and existing files are accepted. Epic uses its manifest's existing relative
+launch executable as the icon source, without executing it. Rune extracts the icons on its image workers.
+
+The metadata reader uses [steam-vdf-parser](https://github.com/mexus/steam-vdf-parser) 0.1.2. It pads an in-memory
+copy to accommodate that parser's full-header check before the four-byte EOF sentinel, and catches parser panics
+so a corrupt optional cache cannot stop discovery. It never modifies Steam's cache.
+
+See `README.md` for scan rules, path overrides, warning handling and validation commands.
+
 For every store there are three separate questions:
 
 1. **Installed**: what's on disk? Usually readable locally, with no auth.
