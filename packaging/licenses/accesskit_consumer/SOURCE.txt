@@ -1,0 +1,2 @@
+Upstream license for accesskit_consumer 0.39.2
+https://raw.githubusercontent.com/AccessKit/accesskit/f3026222559c7f5f46d8f25cb7404de68eb149f0/LICENSE-MIT

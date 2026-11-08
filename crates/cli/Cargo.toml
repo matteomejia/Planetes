@@ -1,0 +1,19 @@
+[package]
+name = "planetes-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "planetes-scan"
+path = "src/main.rs"
+
+[dependencies]
+planetes-stores.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

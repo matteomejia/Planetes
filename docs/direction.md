@@ -1,90 +1,99 @@
-# Planetes: proposed direction
+# Planetes: product direction
 
-*A first proposal drawn from the research in [`research/`](research/). All of it is open for discussion.*
+## Purpose
 
-## Pitch
+A minimal, fast game launcher. Open it, find an installed game, launch it, and return to playing.
+The user should spend only a few seconds in Planetes. Windows is the primary platform; keep macOS compiling.
 
-A fast, beautiful, cross-platform game library that finds every game you have (Steam, Epic, GOG, Battle.net and more)
-with zero setup, and launches them through their own stores. It's built with Rune, so it feels native, smooth at
-120 Hz, and handles 5k-game libraries without stutter.
+## First usable milestone
 
-## Architecture sketch
+Build one complete Steam/Epic launch flow on top of the existing scanner:
 
-```
-planetes/                       (cargo workspace)
-├── crates/core/                domain model, SQLite store, merge/identity, playtime sessions
-├── crates/stores/              one module per store behind a `Store` trait
-│   ├── steam/  epic/  gog/  battlenet/  ubisoft/  ea/  xbox/  manual/
-├── crates/metadata/            IGDB, SteamGridDB, artwork download + resize cache
-├── crates/launcher/            launch via URI/CLI, process watch (sysinfo), session recording
-└── app/                        Rune UI (rune + rune-kit), scenes, playground, headless goldens
-```
+1. A compact window with an automatically focused search field and a short results list.
+2. Each result shows the title and a small store label. Use local icons when available; text is sufficient initially.
+3. Typing filters results; Up/Down changes selection, Enter launches, Escape dismisses. Mouse clicks also work.
+4. Launch through the official store client so its authentication and game startup flow are preserved.
+5. Close the window after a successful launch handoff. If handing off fails, keep the window open with a clear error.
+   A successful handoff does not prove the game itself started.
+6. Load discovery off the UI thread and offer a lightweight refresh action. Keep empty, loading and failure states clear.
 
-```rust
-trait Store {
-    fn id(&self) -> StoreId;
-    fn detect(&self) -> Option<StoreInstall>;                 // is the launcher present?
-    fn installed(&self) -> Result<Vec<SourceGame>>;            // local, no auth
-    fn owned(&self, auth: &Auth) -> Result<Vec<SourceGame>>;   // optional, may need login
-    fn launch(&self, g: &SourceGame) -> Result<LaunchPlan>;    // URI / command + process hints
-    fn install(&self, g: &SourceGame) -> Option<LaunchPlan>;   // usually "open the store's install URI"
-}
-```
+The first milestone uses Steam and Epic, which the CLI already detects. Add GOG, Battle.net and manual entries in
+later increments without expanding the main interaction. Steam game-type classification should remove software
+and shared redistributables from the default results.
 
-- Store syncing runs on a background runtime (tokio) and pushes into Rune state through `AppHandle::update`. Nothing
-  slow touches the UI thread, and the first frame shows the cached library from SQLite instantly.
-- The UI uses `rune_kit::shell`: a sidebar (Library, Recently played, per-store, collections), a main virtualised
-  cover grid or list, and an optional inspector or detail pane. Cover → detail uses Rune's matched-element flight.
-- Testing: every screen gets Rune scenes with fixture libraries (empty, 12 games, 5,000 games), headless `--snap`
-  goldens, and `--tree` assertions. Store parsers get fixture files copied from real installs (anonymised).
+These interaction details are implementation defaults for the minimal direction, rather than additional product
+requirements from the user. Validate the feel with a working launch flow as presentation is refined.
 
-## MVP (v0.1)
+## Visual direction
 
-1. Steam: installed and local playtime (no API key), launch via `steam://`.
-2. Epic: installed via manifests, launch via URI.
-3. GOG: installed via registry, `.info` files, Galaxy DB, launch via playTasks or Galaxy.
-4. Battle.net: installed via registry, launch via client.
-5. Manual add (any exe or app bundle).
-6. Cover grid + list, search, sort, filter by store or installed, favourites, hide.
-7. Artwork with no API key: Steam CDN for Steam games, store-provided or locally cached art where available, a
-   generated placeholder (title + colour) otherwise. **Optional** user-supplied SteamGridDB key in Settings for
-   better covers on every store.
-8. Playtime sessions tracked by process watching. "Continue playing" row.
+Minimal describes the workflow and scope. The user wants the UI to feel modern, polished and a little fancy.
+Visual quality is part of the product, even though a typical session lasts only a few seconds.
 
-**Windows is the primary target.** macOS builds should keep compiling (Rune is most mature there, and it's handy for
-UI work), but features and testing aim at Windows. Linux comes later.
+The next proposed pass keeps the existing search-and-results layout and refines typography, spacing, surface depth,
+selection and hover states. A charcoal palette with one restrained accent, small local game icons, subtle borders
+and quick selection transitions is the starting point. Keep keyboard hints quiet and errors readable.
 
-## Later
+Rune's pinned source supports theme palettes, shadows, rounded clipping, image/icon rendering, springs and blur.
+Use these selectively, with Windows verification. In-window backdrop blur does not by itself establish desktop
+translucency or native Windows acrylic support. Decorative motion must never delay typing, selection or launching;
+respect reduced-motion preferences. Avoid artwork downloads and additional navigation for this polish pass.
 
-- Ownership via login for Epic and GOG (paste-code flow first, `wry` login window if it's worth it)
-- Ubisoft, EA, Xbox, Amazon, itch.io
-- Cross-store merge UI and IGDB metadata
-- Controller/couch mode: `gilrs` → focus navigation, a big-screen theme. Steam Deck.
-- Export to Steam shortcuts (`shortcuts.vdf` + grid art) for Deck users
-- Emulation (ROM folders + emulator profiles)
-- Plugins (WASM or subprocess JSON) once the `Store` trait is stable
+## Scope
 
-## Decisions (2026-11-07)
+- Installed titles only, with local discovery and no store logins or required API keys.
+- Startup, search responsiveness, keyboard navigation and reliable launch handoff take priority.
+- A simple list is the initial interface. Cover galleries, detail pages, sidebars, collections, playtime tracking,
+  rich metadata and artwork services are deferred. The 5,000-cover grid spike is no longer a prerequisite.
+- Start as an ordinary desktop app. Tray residency, a global shortcut and autostart can follow if useful; they are
+  not required for the first usable version.
+- Cache discovery only when needed to keep startup immediate; avoid committing to SQLite or a background service
+  before the launch flow needs them.
+- No controller/gamepad support yet. Linux comes later.
 
-- **Windows is the primary platform.** Development can start on macOS, and testing moves to a Windows desktop.
-- **v0.1 shows installed games only.** No store logins.
-- **No controller support yet.**
-- **No API keys required for v0.1.** Installed-only detection is all local. Artwork falls back to keyless sources.
-  SteamGridDB is an optional bring-your-own key. IGDB is deferred: its Twitch client secret can't be shipped safely
-  in a desktop app, so it needs either a user key or a small proxy we host, which is a decision for later.
+## Architecture
 
-- **License: MIT** (`LICENSE`). It matches Rune and Playnite, so we can reuse Playnite's MIT code (keeping its
-  copyright notice). GPL code, such as Heroic's, can't be copied in.
+The current Cargo workspace separates shared records (`crates/core`), discovery (`crates/stores`), JSON output
+(`crates/cli`) and the Rune UI (`app`). `crates/launcher` constructs launch plans and performs OS handoff.
+Discovery and launch logic remain usable independently of Rune.
 
-## Still open
+Keep source identities scoped to their stores. A launch plan should retain the identifiers needed by its store;
+verify Steam and Epic launch formats before implementation rather than relying on the research notes' guesses.
+Do not run arbitrary executable strings from manifests through a shell.
 
-1. **Reuse vs. reimplement** (post-v0.1): shell out to Legendary/gogdl/Nile (like Heroic) for installs and downloads,
-   or only ever delegate installs to the official launchers?
+A future PowerToys Command Palette extension is an option the user is considering. Preserve the existing separation
+between the UI and shared discovery/launch logic so another frontend can reuse it. No extension implementation,
+plugin framework, IPC service or PowerToys dependency is required now.
 
-## Suggested first spikes
+Rune is pinned to the revision verified in [the Windows build check](windows-build-check.md). Test UI states with
+fixture libraries, element-tree assertions and headless renders. Store parsers retain synthetic fixture tests;
+launch handling needs tests for correct arguments and errors without launching games automatically.
 
-1. **Rune hello on Windows**: pin a rev, build `examples/hello` + `kit-gallery` on Windows (and macOS for
-   comparison), and note issues. This is the biggest risk check, so it's worth doing early on the Windows desktop.
-2. **5,000-cover virtualised grid** in Rune with real JPEGs: measure scroll and memory.
-3. **Steam + Epic local detection** as a CLI that prints JSON. No UI needed.
-4. **Process-watch playtime** for one Steam and one Epic game.
+## Decisions
+
+- **Minimal quick launcher:** search, select, launch, leave. Updated after the Windows scanner spike on 2026-11-07.
+- **Windows first**, while preserving portability in shared crates.
+- **Installed-only, no accounts or required API keys.** IGDB and optional SteamGridDB enrichment are deferred.
+- **Rust + Rune**, with the framework revision pinned in the workspace.
+- **MIT license.** Reused MIT code retains its notices. Do not copy GPL implementation code.
+
+## Next steps
+
+The first slice is implemented: a compact Rune window, background Steam/Epic discovery, local Steam type filtering,
+search, keyboard/mouse activation and shared OS launch handoff. Automated tests cover the input flow and successful/
+failed handoff outcomes; Windows' missing-protocol failure is exercised without opening a game. The user has now
+validated successful startup of both Steam and Epic games on this desktop. The CLI remains available separately;
+`cargo run` opens the app.
+
+The charcoal/violet polish is implemented and checked on Windows: local icon tiles with monogram fallbacks,
+subtle surface depth, distinct focus/hover/selection states and reduced-motion-aware transitions. The loading,
+empty, error and minimum-size layouts have been rendered and inspected.
+
+Release startup and search have now been measured with an opt-in native benchmark. Caching remains deferred;
+the library is available shortly after the first rendered frame. Windows packaging includes icon/version resources,
+single-instance behavior, dependency notices and a checksum. See [Releasing](releasing.md) for the draft workflow.
+
+1. Complete private release-candidate validation and CI, then obtain approval to publish and change visibility.
+2. Extend store coverage in small increments without expanding the main interaction.
+
+The earlier broad library-browser proposal is superseded by this minimal direction. The research documents remain
+references for store formats and framework capabilities, not a commitment to their full feature lists.

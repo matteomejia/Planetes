@@ -1,0 +1,16 @@
+[package]
+name = "planetes-stores"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+planetes-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+steamlocate.workspace = true
+steam-vdf-parser.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
