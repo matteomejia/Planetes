@@ -29,9 +29,10 @@ requirements from the user. Validate the feel with a working launch flow as pres
 Minimal describes the workflow and scope. The user wants the UI to feel modern, polished and a little fancy.
 Visual quality is part of the product, even though a typical session lasts only a few seconds.
 
-The next proposed pass keeps the existing search-and-results layout and refines typography, spacing, surface depth,
-selection and hover states. A charcoal palette with one restrained accent, small local game icons, subtle borders
-and quick selection transitions is the starting point. Keep keyboard hints quiet and errors readable.
+The 2026-11-07 overhaul removed generic "AI app" styling: no gradients, glows, tinted monograms, keycaps or brand
+header. The search field is the top of the window, results are dense single-line rows with store labels, and a
+plain status line holds the count and key hints. Neutral greys carry the UI; one blue accent marks the caret, focus
+and selection. Selection and hover change instantly.
 
 Rune's pinned source supports theme palettes, shadows, rounded clipping, image/icon rendering, springs and blur.
 Use these selectively, with Windows verification. In-window backdrop blur does not by itself establish desktop
@@ -84,9 +85,9 @@ failed handoff outcomes; Windows' missing-protocol failure is exercised without 
 validated successful startup of both Steam and Epic games on this desktop. The CLI remains available separately;
 `cargo run` opens the app.
 
-The charcoal/violet polish is implemented and checked on Windows: local icon tiles with monogram fallbacks,
-subtle surface depth, distinct focus/hover/selection states and reduced-motion-aware transitions. The loading,
-empty, error and minimum-size layouts have been rendered and inspected.
+The neutral/blue redesign is implemented: local icon tiles with letter fallbacks, flat selection and hover, and
+distinct focus rings. The library, loading, empty and error scenes have been rendered headlessly and inspected;
+native Windows behaviour still needs a manual check.
 
 Release startup and search have now been measured with an opt-in native benchmark. Caching remains deferred;
 the library is available shortly after the first rendered frame. Windows packaging includes icon/version resources,

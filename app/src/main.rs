@@ -7,7 +7,7 @@ mod state;
 mod view;
 mod visual;
 
-use rune::{App, AppSpec, Key, KeyEvent, Tx};
+use rune::{App, AppSpec, Key, KeyEvent, Tx, WindowOptions};
 use state::State;
 
 fn on_key(s: &mut State, event: &KeyEvent, tx: &mut Tx) -> bool {
@@ -42,7 +42,15 @@ fn main() {
     {
         return;
     }
-    let mut app = App::new(spec()).on_window(platform::set_icon);
+    // Frameless like a command palette: no title bar or caption buttons. Esc closes it and
+    // empty parts of the search and status bands move it.
+    let mut app = App::new(spec())
+        .window_options(WindowOptions {
+            borderless: true,
+            resizable: false,
+            ..WindowOptions::default()
+        })
+        .on_window(platform::setup_window);
     if metrics::enabled() {
         app = app.on_frame_drawn(metrics::frame);
     }

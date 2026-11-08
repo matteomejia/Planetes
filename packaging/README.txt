@@ -6,7 +6,7 @@ This release has been tested on Windows 11. Steam and Epic Games Launcher must b
 for their games to be discovered and launched through their official clients.
 
 Type to find an installed game. Use Up/Down and Enter, or click a result.
-Escape closes the app. Refresh or Ctrl+R checks your installed libraries again.
+Escape closes the app. Ctrl+R checks your installed libraries again.
 The app exits after handing a game launch to its store. It does not run in the tray.
 Opening Planetes again focuses the existing window instead of opening a duplicate.
 

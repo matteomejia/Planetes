@@ -1,70 +1,50 @@
 use crate::{state::State, visual::*};
 use planetes_core::StoreId;
 use rune::{
-    Color, Cx, El, Key, KeyEvent, ScrollSpec, Spring, SurfaceFit, TextStyle, Tx, col, el, row,
-    spacer, text, text_input,
+    Cx, El, Key, KeyEvent, ScrollSpec, Spring, SurfaceFit, Tx, col, el, row, spacer, text,
+    text_input,
 };
 
-pub(crate) fn view(s: &State, cx: &mut Cx<State>) -> El {
+const ICON: f32 = 20.0;
+
+pub(crate) fn view(s: &State, _cx: &mut Cx<State>) -> El {
     let p = palette();
-    let motion = if cx.is_reduced_motion() {
-        Spring::NONE
-    } else {
-        Spring::new(0.16, 0.0)
-    };
-    let mark = el()
-        .size(30.0, 30.0)
-        .center()
-        .radius(9.0)
-        .continuous_corners()
-        .fill(p.accent.alpha(0.10))
-        .border_gradient(1.0, p.accent.alpha(0.25), p.accent.alpha(0.05))
-        .child(glyph(&ORBIT, 21.0, p.accent));
-    let header = row()
+    let mut body = col()
         .w_full()
-        .h(32.0)
-        .gap(9.0)
-        .center_y()
-        .child(mark)
-        .child(
-            text("Planetes")
-                .font(TextStyle::new(14.0, 600.0).tracking(-0.3))
-                .color(p.ink),
-        )
-        .child(spacer())
-        .child(
-            row()
-                .key("refresh")
-                .h(28.0)
-                .px(8.0)
-                .gap(6.0)
-                .center_y()
-                .radius(7.0)
-                .hover(Color::WHITE.alpha(0.04))
-                .press(Color::WHITE.alpha(0.06))
-                .hover_motion(motion, motion)
-                .focus_ring(1.5, 1.0, p.accent)
-                .role("button")
-                .label("Refresh games")
-                .focusable(true)
-                .opacity(if s.loading { 0.5 } else { 1.0 })
-                .child(glyph(&REFRESH, 13.0, p.muted))
-                .child(
-                    text(if s.loading { "Refreshing" } else { "Refresh" })
-                        .font(SMALL)
-                        .color(p.muted),
-                )
-                .on_press_tx(|state: &mut State, _| state.refresh()),
+        .h_full()
+        .fill(p.bg)
+        .motion(Spring::NONE)
+        .child(search(s))
+        .child(hairline())
+        .child(results(s));
+    if let Some(error) = &s.error {
+        body = body.child(hairline()).child(
+            row().w_full().px(18.0).py(8.0).role("alert").child(
+                text(error.clone())
+                    .wrap()
+                    .key("launch-error")
+                    .font(SMALL)
+                    .color(p.error)
+                    .grow(1.0)
+                    .min_w(0.0),
+            ),
         );
-    let input = text_input(&s.query, TextStyle::new(16.0, 400.0).lh(26.0))
+    }
+    body.child(hairline()).child(status(s))
+}
+
+fn search(s: &State) -> El {
+    let p = palette();
+    let input = text_input(&s.query, QUERY)
         .key("search")
         .single_line()
         .grow(1.0)
         .min_w(0.0)
         .h(28.0)
         .color(p.ink)
-        .placeholder("Find a game…", p.faint)
-        .label("Find a game")
+        .caret(p.accent, p.accent.alpha(0.35))
+        .placeholder("Search games", p.faint)
+        .label("Search games")
         .on_edit(|state: &mut State| &mut state.query)
         .on_input_change(|state: &mut State, tx| {
             state.filter();
@@ -87,117 +67,64 @@ pub(crate) fn view(s: &State, cx: &mut Cx<State>) -> El {
                 state.launch_selected();
             }
         });
-    let search = row()
+    row()
         .w_full()
         .h(56.0)
-        .px(15.0)
-        .gap(12.0)
+        .px(18.0)
         .center_y()
-        .radius(12.0)
-        .continuous_corners()
-        .fill(p.panel)
-        .gradient(Color::WHITE.alpha(0.015), Color::TRANSPARENT)
-        .border_gradient(1.0, Color::WHITE.alpha(0.11), Color::WHITE.alpha(0.055))
-        .focus_within_ring(1.0, 0.0, p.accent.alpha(0.45))
-        .shadow(3.0, 14.0, Color::BLACK.alpha(0.12))
-        .child(glyph(&SEARCH, 19.0, p.muted))
-        .child(input);
-    let mut results = col().key("results").w_full().gap(4.0).px(2.0).py(2.0);
+        .window_drag()
+        .child(input)
+}
+
+fn results(s: &State) -> El {
+    let p = palette();
+    let mut list = col().key("results").w_full().padding(6.0);
     for (position, &index) in s.results.iter().enumerate() {
         let game = &s.games[index];
         let clicked = game.clone();
         let selected = position == s.selected;
         let store = match game.store {
             StoreId::Steam => "Steam",
-            StoreId::Epic => "Epic Games",
+            StoreId::Epic => "Epic",
         };
         let image = s.icons.get(&(game.store, game.source_id.clone()));
         let tile = match image.filter(|image| image.is_ready() && image.error().is_none()) {
             Some(image) => el()
-                .size(32.0, 32.0)
-                .radius(8.0)
+                .size(ICON, ICON)
+                .radius(3.0)
                 .pixels_fit(image.pixels(), SurfaceFit::Fit),
-            None => monogram(&game.title),
+            None => monogram(&game.title, ICON),
         };
-        let details = col()
-            .grow(1.0)
-            .min_w(0.0)
-            .gap(1.0)
-            .child(text(game.title.clone()).truncate().font(BODY).color(p.ink))
-            .child(
-                text(store)
-                    .font(TextStyle::new(10.5, 400.0).lh(14.0))
-                    .color(p.muted),
-            );
-        let enter = el()
-            .size(26.0, 24.0)
-            .center()
-            .radius(6.0)
-            .fill(if selected {
-                p.accent.alpha(0.10)
-            } else {
-                Color::TRANSPARENT
-            })
-            .child(glyph(
-                &RETURN,
-                14.0,
-                if selected {
-                    p.accent
-                } else {
-                    Color::TRANSPARENT
-                },
-            ));
-        results = results.child(
+        list = list.child(
             row()
                 .key(format!("game-{index}"))
                 .w_full()
-                .h(50.0)
-                .px(11.0)
-                .gap(12.0)
+                .h(36.0)
+                .px(10.0)
+                .gap(11.0)
                 .center_y()
-                .radius(11.0)
-                .continuous_corners()
+                .radius(4.0)
                 .fill(if selected {
-                    p.panel
+                    p.selected
                 } else {
-                    Color::TRANSPARENT
+                    rune::Color::TRANSPARENT
                 })
-                .gradient(
-                    if selected {
-                        p.accent.alpha(0.09)
-                    } else {
-                        Color::TRANSPARENT
-                    },
-                    if selected {
-                        p.accent.alpha(0.025)
-                    } else {
-                        Color::TRANSPARENT
-                    },
-                )
-                .border_gradient(
-                    1.0,
-                    if selected {
-                        p.accent.alpha(0.28)
-                    } else {
-                        Color::TRANSPARENT
-                    },
-                    if selected {
-                        p.accent.alpha(0.10)
-                    } else {
-                        Color::TRANSPARENT
-                    },
-                )
-                .hover(Color::WHITE.alpha(0.035))
-                .press(p.accent.alpha(0.07))
-                .motion(motion)
-                .hover_motion(motion, motion)
+                .hover(p.hover)
+                .motion(Spring::NONE)
                 .focus_ring(1.5, 0.0, p.accent)
                 .role("button")
                 .label(format!("Launch {} via {store}", game.title))
                 .focusable(true)
                 .child(tile)
-                .child(details)
-                .child(enter)
+                .child(
+                    text(game.title.clone())
+                        .truncate()
+                        .font(BODY)
+                        .color(p.ink)
+                        .grow(1.0)
+                        .min_w(0.0),
+                )
+                .child(text(store).font(SMALL).color(p.muted))
                 .on_press_tx(move |state: &mut State, _| {
                     if !state.launching {
                         state.selected = position;
@@ -207,147 +134,92 @@ pub(crate) fn view(s: &State, cx: &mut Cx<State>) -> El {
         );
     }
     if s.results.is_empty() {
-        results = results.child(empty_state(s));
+        list = list.child(empty_state(s));
     }
-    let count = if s.launching {
-        "Opening…".into()
-    } else if s.loading {
-        "Finding games…".into()
-    } else {
-        format!(
-            "{} {}",
-            s.results.len(),
-            if s.results.len() == 1 {
-                "game"
-            } else {
-                "games"
-            }
-        )
-    };
-    let section = row()
-        .w_full()
-        .px(3.0)
-        .center_y()
-        .child(
-            text(if s.query.text.trim().is_empty() {
-                "YOUR LIBRARY"
-            } else {
-                "SEARCH RESULTS"
-            })
-            .font(TextStyle::new(9.0, 600.0).tracking(1.1))
-            .color(p.faint),
-        )
-        .child(spacer())
-        .child(text(count).key("count").font(SMALL).color(p.muted));
-    let library = col()
-        .w_full()
-        .grow(1.0)
-        .min_h(0.0)
-        .gap(8.0)
-        .child(section)
-        .child(
-            results
-                .scroll(ScrollSpec {
-                    stick_bottom: false,
-                })
-                .grow(1.0)
-                .min_h(0.0),
-        );
-    let mut body = col()
-        .w_full()
-        .h_full()
-        .padding(20.0)
-        .gap(15.0)
-        .fill(p.bg)
-        .gradient(p.accent.alpha(0.025), Color::TRANSPARENT)
-        .motion(Spring::NONE)
-        .child(header)
-        .child(search)
-        .child(library);
-    if let Some(error) = &s.error {
-        let tint = p.error;
-        body = body.child(
-            row()
-                .w_full()
-                .gap(9.0)
-                .padding(10.0)
-                .radius(9.0)
-                .fill(tint.alpha(0.055))
-                .border(1.0, tint.alpha(0.13))
-                .role("alert")
-                .child(glyph(&ALERT, 15.0, tint))
-                .child(
-                    text(error.clone())
-                        .wrap()
-                        .key("launch-error")
-                        .font(SMALL)
-                        .color(tint)
-                        .grow(1.0)
-                        .min_w(0.0),
-                ),
-        );
-    }
-    if s.warnings > 0 {
-        body = body.child(
-            text("Some games could not be checked. Try Refresh.")
-                .key("scan-warning")
-                .font(SMALL)
-                .color(p.muted),
-        );
-    }
-    body.child(el().w_full().h(1.0).fill(p.line))
-        .child(footer())
-}
-
-fn footer() -> El {
-    let p = palette();
-    row()
-        .w_full()
-        .center_y()
-        .gap(5.0)
-        .child(keycap("↑"))
-        .child(keycap("↓"))
-        .child(text("Navigate").font(SMALL).color(p.faint))
-        .child(spacer())
-        .child(keycap("↵"))
-        .child(text("Launch").font(SMALL).color(p.muted))
-        .child(el().w(8.0))
-        .child(keycap("esc"))
-        .child(text("Close").font(SMALL).color(p.faint))
+    list.scroll(ScrollSpec {
+        stick_bottom: false,
+    })
+    .grow(1.0)
+    .min_h(0.0)
 }
 
 fn empty_state(s: &State) -> El {
     let p = palette();
-    let (title, detail) = if s.loading {
-        ("Finding your games", "Checking your installed libraries…")
+    let message = if s.loading {
+        "Scanning installed games…".to_string()
     } else if s.games.is_empty() {
-        (
-            "Your next game starts here",
-            "Install a game in Steam or Epic, then refresh.",
-        )
+        "No installed Steam or Epic games found. Install one, then press Ctrl+R.".to_string()
     } else {
-        (
-            "No matches this time",
-            "Try a shorter name or an abbreviation.",
-        )
+        format!("No installed games match “{}”.", s.query.text.trim())
     };
-    col()
-        .key("empty-state")
+    row().key("empty-state").w_full().px(12.0).py(10.0).child(
+        text(message)
+            .wrap()
+            .font(BODY)
+            .color(p.muted)
+            .grow(1.0)
+            .min_w(0.0),
+    )
+}
+
+fn status(s: &State) -> El {
+    let p = palette();
+    let count = if s.launching {
+        "Opening…".to_string()
+    } else if s.loading {
+        "Scanning…".to_string()
+    } else if s.query.text.trim().is_empty() {
+        let n = s.results.len();
+        format!("{n} {}", if n == 1 { "game" } else { "games" })
+    } else {
+        format!("{} of {}", s.results.len(), s.games.len())
+    };
+    let mut left = row()
+        .gap(6.0)
+        .center_y()
+        .min_w(0.0)
+        .child(text(count).key("count").font(SMALL).color(p.muted));
+    if s.warnings > 0 {
+        left = left.child(
+            text("· Some games could not be checked")
+                .key("scan-warning")
+                .truncate()
+                .font(SMALL)
+                .color(p.faint)
+                .min_w(0.0),
+        );
+    }
+    let rescan = hint("Ctrl+R", "rescan")
+        .key("refresh")
+        .px(4.0)
+        .h(22.0)
+        .radius(3.0)
+        .hover(p.hover)
+        .focus_ring(1.5, 0.0, p.accent)
+        .role("button")
+        .label("Rescan games")
+        .focusable(true)
+        .opacity(if s.loading { 0.5 } else { 1.0 })
+        .on_press_tx(|state: &mut State, _| state.refresh());
+    row()
         .w_full()
-        .py(27.0)
-        .gap(8.0)
-        .center()
-        .child(
-            el().size(42.0, 42.0)
-                .center()
-                .radius(13.0)
-                .fill(p.accent.alpha(0.055))
-                .child(glyph(
-                    if s.loading { &ORBIT } else { &SEARCH },
-                    22.0,
-                    p.accent.alpha(0.65),
-                )),
-        )
-        .child(text(title).font(BODY).color(p.ink))
-        .child(text(detail).font(SMALL).color(p.muted))
+        .h(30.0)
+        .px(16.0)
+        .gap(10.0)
+        .center_y()
+        .window_drag()
+        .child(left)
+        .child(spacer())
+        .child(hint("Enter", "launch"))
+        .child(rescan)
+        .child(hint("Esc", "close"))
+}
+
+fn hint(key: &str, action: &str) -> El {
+    let p = palette();
+    row()
+        .gap(4.0)
+        .center_y()
+        .child(text(key).font(SMALL_STRONG).color(p.muted))
+        .child(text(action).font(SMALL).color(p.faint))
 }

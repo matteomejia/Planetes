@@ -61,7 +61,7 @@ fn reduced_motion_applies_selection_without_an_animated_fill() {
         .into_iter()
         .find(|element| element.key.as_deref() == Some(&wanted))
         .unwrap();
-    assert_eq!(element.fill, visual::palette().panel);
+    assert_eq!(element.fill, visual::palette().selected);
     assert!(!element.moving);
 }
 
