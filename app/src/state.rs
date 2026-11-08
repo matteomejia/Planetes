@@ -34,6 +34,8 @@ pub(crate) struct State {
     /// Whether the window has had focus since it was last shown. Only losing focus it had
     /// hides it: Windows may show a launched window without focus, and that is no click-away.
     pub focused: bool,
+    /// A downloaded update, applied the next time the launcher hides.
+    pub pending_update: Option<crate::update::Pending>,
 }
 
 impl Default for State {
@@ -62,6 +64,7 @@ impl Default for State {
             tray: None,
             last_scan: None,
             focused: false,
+            pending_update: None,
         }
     }
 }
@@ -98,7 +101,8 @@ impl State {
         if self.resident {
             self.apply_settings();
             if let Some(handle) = self.handle.clone() {
-                crate::background::watch_settings(handle);
+                crate::background::watch_settings(handle.clone());
+                crate::update::watch(handle);
             }
         }
         self.refresh();
@@ -135,6 +139,7 @@ impl State {
         if let Some(handle) = &self.handle {
             handle.hide();
         }
+        self.apply_update(tx);
     }
 
     /// The hotkey: summon, or dismiss when already showing.

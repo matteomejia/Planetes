@@ -22,9 +22,13 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: windows-portable
-          path: dist
-      - name: Create draft and attach portable download
+          name: windows-release
+          path: dist/velopack
+      - name: Install Velopack CLI
+        run: |
+          dotnet tool install -g vpk --version 1.2.161
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+      - name: Create draft with installer and update packages
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
@@ -32,9 +36,11 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          archive="dist/Planetes-v${RELEASE_VERSION}-windows-x64.zip"
-          test -f "$archive"
-          test -f "$archive.sha256"
-          gh release create "v$RELEASE_VERSION" "$archive" "$archive.sha256" \
-            --draft --target "$GITHUB_SHA" --title "Planetes v$RELEASE_VERSION" \
-            --notes-file "docs/releases/v$RELEASE_VERSION.md"
+          test -f "dist/velopack/Planetes-$RELEASE_VERSION-full.nupkg"
+          test -f dist/velopack/SHA256SUMS.txt
+          # A draft is invisible to the app's update check until it is published.
+          vpk upload github --outputDir dist/velopack --repoUrl "https://github.com/$GITHUB_REPOSITORY" \
+            --token "$GH_TOKEN" --tag "v$RELEASE_VERSION" --targetCommitish "$GITHUB_SHA" \
+            --releaseName "Planetes v$RELEASE_VERSION"
+          gh release edit "v$RELEASE_VERSION" --notes-file "docs/releases/v$RELEASE_VERSION.md"
+          gh release upload "v$RELEASE_VERSION" dist/velopack/SHA256SUMS.txt

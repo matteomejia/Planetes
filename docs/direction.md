@@ -22,7 +22,8 @@ private). Agreed v1.0 scope, delivered incrementally:
    GOG, Xbox/Game Pass, Battle.net, EA app, Ubisoft Connect, Amazon Games, itch.io and manual entries.
 3. **Better results:** recently launched first, pinned favourites, merged duplicates across stores.
 4. **Per-game actions:** open install folder, open store page, uninstall through the store, from the keyboard.
-5. **Distribution:** installer and portable ZIP on WinGet, an opt-in update check, an ARM64 build.
+5. **Distribution:** a Velopack installer and self-updating portable ZIP (in progress 2026-11-08; update checks are on
+   by default with a setting to turn them off), later code signing, WinGet and an ARM64 build.
 6. **Launch:** README with a GIF and launch posts.
 
 ## First usable milestone (done)

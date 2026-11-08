@@ -1,0 +1,1 @@
+Upstream license for velopack 1.2.161: https://raw.githubusercontent.com/velopack/velopack/92d6a1c91716729d449034df5c50307dcce39493/LICENSE

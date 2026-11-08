@@ -5,7 +5,8 @@ A minimal quick launcher for installed games (Steam, Epic, GOG, Battle.net, …)
 
 Status: frameless, neutral/blue Rune launcher (redesigned 2026-11-07) running in background mode (tray, configurable
 global hotkey in `%APPDATA%\Planetes\settings.json`, hide on focus loss, optional autostart), background scanning,
-local game icons, Steam type filtering and Steam/Epic launch handoff implemented. Read `README.md` for commands
+local game icons, Steam type filtering and Steam/Epic launch handoff implemented. Velopack installer and self-updates
+from GitHub Releases added 2026-11-08; releases need the .NET 8 SDK and `vpk` 1.2.161. Read `README.md` for commands
 and scanner limitations, then `docs/direction.md`, `docs/research/` and `docs/windows-build-check.md`.
 
 The user has validated successful startup of both Steam and Epic games on this desktop.

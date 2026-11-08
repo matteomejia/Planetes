@@ -1,6 +1,7 @@
-Planetes - Windows x64 portable edition
+Planetes - Windows x64
 
-Extract the entire ZIP, then open planetes.exe. Rust is not required.
+Installed with Planetes-win-Setup.exe, or extracted from Planetes-win-Portable.zip and opened
+with Planetes.exe. Rust is not required.
 Requires a Windows PC with a graphics driver supported by wgpu (DirectX 12 or Vulkan).
 This release has been tested on Windows 11. Steam and Epic Games Launcher must be installed
 for their games to be discovered and launched through their official clients.
@@ -14,8 +15,10 @@ To change the hotkey, choose Edit settings in the tray menu, for example:
 The tray menu can also start Planetes with Windows, and Quit exits it.
 Opening Planetes again shows the existing window instead of opening a duplicate.
 
-No accounts, API keys or artwork downloads are needed. No automatic updater is included.
-This initial build is unsigned; Windows may identify its publisher as unknown.
+No accounts, API keys or artwork downloads are needed. Planetes checks GitHub for a new
+version after it starts and then daily, and installs it the next time its window hides. To turn
+this off, add "check_for_updates": false to the settings file.
+This build is unsigned; Windows may identify its publisher as unknown.
 
 Updates and source: https://github.com/matteomejia/Planetes
 Report problems: https://github.com/matteomejia/Planetes/issues

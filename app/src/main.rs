@@ -5,6 +5,7 @@ mod fixtures;
 mod metrics;
 mod platform;
 mod state;
+mod update;
 mod view;
 mod visual;
 
@@ -35,6 +36,7 @@ fn spec() -> AppSpec<State> {
 }
 
 fn main() {
+    update::startup();
     metrics::start();
     let args: Vec<String> = std::env::args().skip(1).collect();
     // Started hidden, as Windows does at sign-in when "Start with Windows" is on.

@@ -127,6 +127,15 @@ fn settings_default_the_hotkey_and_reject_malformed_values() {
 }
 
 #[test]
+fn update_checks_stay_on_unless_turned_off() {
+    use update::updates_from_json;
+    assert!(updates_from_json("{}"));
+    assert!(updates_from_json("{hotkey"));
+    assert!(updates_from_json(r#"{"check_for_updates": "no"}"#));
+    assert!(!updates_from_json(r#"{"check_for_updates": false}"#));
+}
+
+#[test]
 fn resident_escape_resets_the_search_instead_of_quitting() {
     let mut rt = runtime();
     rt.state.resident = true;
