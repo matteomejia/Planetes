@@ -13,7 +13,7 @@ v0.1.0 copies don't update themselves: install the current release once.
 
 Steam and Epic Games Launcher handle game startup. No account connection or API key is required in Planetes.
 
-![Planetes launcher with fixture game entries](docs/images/launcher.png)
+![Planetes launcher showing game icons and Baldur's Gate 3 cover art, logo and play details](docs/images/launcher.png)
 
 ## Development
 
@@ -35,6 +35,9 @@ cargo run --locked --quiet -p planetes-cli -- --store epic --epic-manifests 'C:\
 cargo run --locked -p planetes -- --scene library --snap artifacts/launcher.png
 # Optional: borrow real art for the preview from a folder of <row>-hero.jpg, <row>-logo.png, <row>-icon.exe.
 $env:PLANETES_FIXTURE_ART = 'artifacts/art'; cargo run --locked -p planetes -- --scene no-art --snap artifacts/no-art.png
+# README scene: the same row numbers, with Counter-Strike 2 at row 2 and HELLDIVERS 2 at row 6.
+# Supply matching icons (.exe or .jpg), hero art and logos; Baldur's Gate 3 is selected.
+cargo run --locked -p planetes -- --scene readme --snap artifacts/readme-preview.png
 
 cargo fmt --all -- --check
 cargo check --locked --workspace --all-targets
