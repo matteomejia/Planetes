@@ -2,6 +2,7 @@
 
 mod background;
 mod fixtures;
+mod history;
 mod metrics;
 mod platform;
 mod state;

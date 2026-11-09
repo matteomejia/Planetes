@@ -87,6 +87,52 @@ fn steam_classifies_games_demos_and_non_games_in_both_cache_versions() {
 }
 
 #[test]
+fn steam_play_history_comes_from_the_account_that_played_last() {
+    let temp = TempDir::new().unwrap();
+    for id in [100, 101, 102] {
+        steam_app(temp.path(), id, 4, true);
+    }
+    libraries(temp.path(), &[temp.path()]);
+    let config = |account: &str, apps: &str| {
+        let dir = temp.path().join("userdata").join(account).join("config");
+        fs::create_dir_all(&dir).unwrap();
+        let text = format!(
+            "\"UserLocalConfigStore\"\n{{\n\t\"Software\"\n\t{{\n\t\t\"valve\"\n\t\t{{\n\t\t\t\"Steam\"\n\t\t\t{{\n\t\t\t\t\"Apps\"\n\t\t\t\t{{\n{apps}\t\t\t\t}}\n\t\t\t}}\n\t\t}}\n\t}}\n}}\n"
+        );
+        fs::write(dir.join("localconfig.vdf"), text).unwrap();
+    };
+    config(
+        "1",
+        "\"100\" { \"LastPlayed\" \"1700000000\" \"Playtime\" \"90\" }\n\"101\" { \"LastPlayed\" \"0\" \"Playtime\" \"0\" }\n",
+    );
+    config(
+        "2",
+        "\"100\" { \"LastPlayed\" \"1800000000\" \"Playtime\" \"5\" }\n",
+    );
+    fs::create_dir_all(temp.path().join("userdata/3/config")).unwrap();
+    fs::write(
+        temp.path().join("userdata/3/config/localconfig.vdf"),
+        "\"broken",
+    )
+    .unwrap();
+    let report = scan(&steam_options(temp.path()));
+    let activity: Vec<_> = report
+        .games
+        .iter()
+        .map(|g| (g.source_id.as_str(), g.last_played, g.playtime_minutes))
+        .collect();
+    assert_eq!(
+        activity,
+        [
+            ("100", Some(1_800_000_000), Some(5)),
+            ("101", None, None),
+            ("102", None, None)
+        ]
+    );
+    assert_eq!(report.warnings.len(), 1, "{:?}", report.warnings);
+}
+
+#[test]
 fn broken_steam_cache_warns_but_preserves_manifest_discovery() {
     let temp = TempDir::new().unwrap();
     steam_app(temp.path(), 100, 4, true);

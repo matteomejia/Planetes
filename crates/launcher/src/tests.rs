@@ -10,6 +10,8 @@ fn game(store: StoreId, id: &str) -> SourceGame {
         manifest_path: "fixture".into(),
         epic_identity: None,
         icon_path: None,
+        last_played: None,
+        playtime_minutes: None,
     }
 }
 

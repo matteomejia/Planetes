@@ -1,11 +1,13 @@
 use crate::{state::State, visual::*};
-use planetes_core::StoreId;
+use planetes_core::{SourceGame, StoreId};
 use rune::{
-    Cx, El, Key, KeyEvent, ScrollSpec, Spring, SurfaceFit, Tx, col, el, row, spacer, text,
+    Align, Cx, El, Key, KeyEvent, ScrollSpec, Spring, SurfaceFit, Tx, col, el, row, spacer, text,
     text_input,
 };
 
 const ICON: f32 = 20.0;
+/// Fits the widest store name, "Steam", in the small font.
+const STORE_COLUMN: f32 = 40.0;
 
 pub(crate) fn view(s: &State, _cx: &mut Cx<State>) -> El {
     let p = palette();
@@ -91,6 +93,7 @@ fn search(s: &State) -> El {
 
 fn results(s: &State) -> El {
     let p = palette();
+    let now = crate::history::now();
     let mut list = col().key("results").w_full().padding(6.0);
     for (position, &index) in s.results.iter().enumerate() {
         let game = &s.games[index];
@@ -99,6 +102,11 @@ fn results(s: &State) -> El {
         let store = match game.store {
             StoreId::Steam => "Steam",
             StoreId::Epic => "Epic",
+        };
+        let details = details(game, now);
+        let label = match &details {
+            Some(details) => format!("Launch {} via {store}, {details}", game.title),
+            None => format!("Launch {} via {store}", game.title),
         };
         let image = s.icons.get(&(game.store, game.source_id.clone()));
         let tile = match image.filter(|image| image.is_ready() && image.error().is_none()) {
@@ -126,7 +134,7 @@ fn results(s: &State) -> El {
                 .motion(Spring::NONE)
                 .focus_ring(1.5, 0.0, p.accent)
                 .role("button")
-                .label(format!("Launch {} via {store}", game.title))
+                .label(label)
                 .focusable(true)
                 .child(tile)
                 .child(
@@ -137,7 +145,20 @@ fn results(s: &State) -> El {
                         .grow(1.0)
                         .min_w(0.0),
                 )
-                .child(text(store).font(SMALL).color(p.muted))
+                .children(details.map(|details| {
+                    text(details)
+                        .key(format!("details-{index}"))
+                        .font(SMALL)
+                        .color(p.faint)
+                }))
+                // A fixed column keeps the details aligned whatever the store's name.
+                .child(
+                    text(store)
+                        .font(SMALL)
+                        .color(p.muted)
+                        .w(STORE_COLUMN)
+                        .align(Align::End),
+                )
                 .on_press_tx(move |state: &mut State, _| {
                     if !state.launching {
                         state.selected = position;
@@ -154,6 +175,31 @@ fn results(s: &State) -> El {
     })
     .grow(1.0)
     .min_h(0.0)
+}
+
+/// "2 weeks ago · 48 h": when the game was last played and the store's recorded playtime.
+pub(crate) fn details(game: &SourceGame, now: u64) -> Option<String> {
+    let played = game.last_played.map(|at| ago(now.saturating_sub(at)));
+    let time = game.playtime_minutes.map(|minutes| match minutes {
+        0..60 => format!("{minutes} min"),
+        _ => format!("{} h", (minutes + 30) / 60),
+    });
+    let parts: Vec<_> = played.into_iter().chain(time).collect();
+    (!parts.is_empty()).then(|| parts.join(" · "))
+}
+
+fn ago(seconds: u64) -> String {
+    const DAY: u64 = 24 * 60 * 60;
+    let days = seconds / DAY;
+    let (n, unit) = match days {
+        0 => return "today".into(),
+        1 => return "yesterday".into(),
+        2..14 => (days, "day"),
+        14..60 => (days / 7, "week"),
+        60..730 => (days / 30, "month"),
+        _ => (days / 365, "year"),
+    };
+    format!("{n} {unit}s ago")
 }
 
 fn empty_state(s: &State) -> El {

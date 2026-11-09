@@ -12,6 +12,7 @@ pub(super) fn scan(root: Option<&Path>, report: &mut ScanReport) {
         }
     };
     let types = super::steam_types::read(steam.path(), report);
+    let activity = super::steam_activity::read(steam.path(), report);
     let mut paths = match steam.library_paths() {
         Ok(paths) => paths,
         Err(error) => {
@@ -87,6 +88,7 @@ pub(super) fn scan(root: Option<&Path>, report: &mut ScanReport) {
                 continue;
             }
             if super::installed_directory(&install_dir, &manifest, StoreId::Steam, report) {
+                let played = activity.get(&id).copied().unwrap_or_default();
                 report.games.push(SourceGame {
                     store: StoreId::Steam,
                     source_id: id.to_string(),
@@ -102,6 +104,8 @@ pub(super) fn scan(root: Option<&Path>, report: &mut ScanReport) {
                         .and_then(|metadata| metadata.icon_hash.as_ref())
                         .map(|hash| steam.path().join("steam/games").join(format!("{hash}.ico")))
                         .filter(|path| path.is_file()),
+                    last_played: played.last_played,
+                    playtime_minutes: played.playtime_minutes,
                 });
             }
         }

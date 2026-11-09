@@ -61,6 +61,10 @@ launching Planetes again still open it. Planetes hides after the OS accepts a la
 on failure. This is a handoff to the store client, not confirmation that the game started. No login, cover service
 or playtime tracker is used.
 
+Each row shows when the game was last played and, for Steam, the playtime Steam recorded. Epic keeps no local play
+history, so Epic games show their last launch from Planetes, saved in `%APPDATA%\Planetes\history.json` (launch
+times only).
+
 The neutral grey UI uses one blue accent, local Steam icon caches and Epic executable icons, with letter fallbacks.
 Icon reads and extraction run on Rune's image workers, retaining at most 128 64px icon rasters (about 2 MiB plus
 mip levels). No artwork is downloaded. Selection and hover transitions respect the system's reduced-motion setting;
@@ -83,7 +87,8 @@ protocol associations and uses ShellExecuteExW without a command shell.
   Local `appinfo.vdf` type metadata excludes known software, tools, DLC and other non-games; games and demos remain.
   Missing type metadata preserves entries rather than hiding possible games, so non-games can appear when the
   cache is incomplete. Broken caches warn and fall back to manifest discovery. Apps whose FullyInstalled bit is
-  cleared during a download/update are omitted for now.
+  cleared during a download/update are omitted for now. Last played and playtime come from each account's
+  `userdata/<id>/config/localconfig.vdf`; with several accounts, a game uses the account that played it last.
 - Epic reads `.item` manifests and excludes incomplete installs, non-game categories, and content-only entries.
   Install directories must exist. `LauncherInstalled.dat` was verified locally but is not needed as a second source.
 - Malformed manifests, inaccessible libraries and missing install directories become warnings; other entries survive.

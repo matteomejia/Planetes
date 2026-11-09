@@ -222,6 +222,16 @@ impl State {
         }
     }
 
+    /// Show a launch as the game's last play without waiting for the next scan.
+    pub fn mark_played(&mut self, launched: &SourceGame) {
+        let now = crate::history::now();
+        for game in &mut self.games {
+            if (game.store, &game.source_id) == (launched.store, &launched.source_id) {
+                game.last_played = Some(now);
+            }
+        }
+    }
+
     pub fn refresh(&mut self) {
         if self.launching || self.scanning {
             return;
@@ -233,7 +243,8 @@ impl State {
         self.scanning = true;
         self.error = None;
         std::thread::spawn(move || {
-            let report = planetes_stores::scan(&Default::default());
+            let mut report = planetes_stores::scan(&Default::default());
+            crate::history::merge(&mut report.games);
             handle.update(move |state, tx| {
                 state.apply_report(report);
                 tx.instant();
@@ -294,7 +305,15 @@ pub(crate) fn poll(state: &mut State, _: f64, tx: &mut Tx) -> bool {
         } else {
             planetes_launcher::launch(&game)
         };
-        handle.update(move |state, tx| state.finish_launch(result, tx));
+        if result.is_ok() {
+            crate::history::record(&game);
+        }
+        handle.update(move |state, tx| {
+            if result.is_ok() {
+                state.mark_played(&game);
+            }
+            state.finish_launch(result, tx);
+        });
     });
     changed
 }
