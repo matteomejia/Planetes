@@ -37,8 +37,9 @@ jobs:
           [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           test -f "dist/velopack/Planetes-$RELEASE_VERSION-full.nupkg"
           test -f dist/velopack/SHA256SUMS.txt
-          # A draft is invisible to the app's update check until it is published.
-          vpk upload github --outputDir dist/velopack --repoUrl "https://github.com/$GITHUB_REPOSITORY" \
+          # A draft is invisible to the app's update check until it is published. The channel is
+          # explicit because vpk defaults to the runner's OS (linux here); the packages are win.
+          vpk upload github --channel win --outputDir dist/velopack --repoUrl "https://github.com/$GITHUB_REPOSITORY" \
             --token "$GH_TOKEN" --tag "v$RELEASE_VERSION" --targetCommitish "$GITHUB_SHA" \
             --releaseName "Planetes v$RELEASE_VERSION"
           gh release edit "v$RELEASE_VERSION" --notes-file "docs/releases/v$RELEASE_VERSION.md"
