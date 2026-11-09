@@ -38,6 +38,18 @@ fn steam_icon_discovery_uses_only_existing_cached_icons_with_valid_hashes() {
                 .icon_path
                 .is_none()
         );
+        // Without Steam's .ico, the small icon its library view caches stands in.
+        let library = temp.path().join("appcache/librarycache/100");
+        fs::create_dir_all(&library).unwrap();
+        let small = library.join(format!("{hash}.jpg"));
+        fs::write(&small, b"fixture").unwrap();
+        assert_eq!(
+            scan(&steam_options(temp.path())).games[0]
+                .icon_path
+                .as_ref(),
+            Some(&small)
+        );
+        fs::remove_file(&small).unwrap();
         fs::write(
             temp.path().join("appcache/appinfo.vdf"),
             appinfo::appinfo_with_icon(version, &[(100, "Game")], Some("../unexpected")),

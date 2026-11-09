@@ -282,9 +282,28 @@ impl State {
             let key = (game.store, game.source_id.clone());
             let image = previous
                 .remove(&key)
-                .unwrap_or_else(|| cache.app_icon_scaled(path, 32.0, 2.0));
+                .unwrap_or_else(|| icon_image(cache, path, 32.0));
             self.icons.insert(key, image);
         }
+    }
+}
+
+/// A game's icon: an image file (Steam's cached library icon) decodes as it is; an
+/// executable or `.ico` gives its first icon, rasterized at 2x `size`.
+pub(crate) fn icon_image(
+    cache: &rune::ImageCache,
+    path: &std::path::Path,
+    size: f32,
+) -> rune::Image {
+    let image_file = path.extension().is_some_and(|ext| {
+        ["jpg", "jpeg", "png"]
+            .iter()
+            .any(|known| ext.eq_ignore_ascii_case(known))
+    });
+    if image_file {
+        cache.file(path, size, 2.0)
+    } else {
+        cache.app_icon_scaled(path, size, 2.0)
     }
 }
 

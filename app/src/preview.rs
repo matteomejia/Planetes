@@ -78,7 +78,7 @@ pub(crate) fn poll(state: &mut State) -> bool {
             icon: game
                 .icon_path
                 .as_ref()
-                .map(|path| cache.app_icon_scaled(path, ICON, 2.0)),
+                .map(|path| crate::state::icon_image(cache, path, ICON)),
         });
     }
     let preview = state.preview.as_ref().expect("requested above");

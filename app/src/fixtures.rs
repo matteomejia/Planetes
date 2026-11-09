@@ -40,7 +40,7 @@ pub(crate) fn library(s: &mut State) {
             title: (*name).into(),
             install_dir: "fixture-game".into(),
             manifest_path: "fixture-manifest".into(),
-            icon_path: fixture_art(i, "icon.exe"),
+            icon_path: fixture_art(i, "icon.exe").or_else(|| fixture_art(i, "icon.jpg")),
             // A mix of recent, old and never-played games, as a real library has.
             last_played: [
                 Some(2),
@@ -68,7 +68,7 @@ pub(crate) fn library(s: &mut State) {
                 Some(42),
             ][i],
             // Screenshots can borrow real art: `PLANETES_FIXTURE_ART` names a folder holding
-            // `<row>-hero.jpg`, `<row>-logo.png` and `<row>-icon.exe`. Tests and scenes run fine without it.
+            // `<row>-hero.jpg`, `<row>-logo.png` and `<row>-icon.exe` or `.jpg`. Tests and scenes run fine without it.
             hero_path: fixture_art(i, "hero.jpg"),
             logo_path: fixture_art(i, "logo.png"),
             hero_url: None,
