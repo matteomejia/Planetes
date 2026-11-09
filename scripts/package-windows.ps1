@@ -32,10 +32,17 @@ try {
     $commit = (& git rev-parse HEAD).Trim()
     $info = @{ version = $Version; source_commit = $commit; source_dirty = $dirty; target = 'x86_64-pc-windows-msvc'; executable_sha256 = (Get-FileHash (Join-Path $folder 'planetes.exe') -Algorithm SHA256).Hash.ToLowerInvariant() }
     [IO.File]::WriteAllText((Join-Path $folder 'BUILD-INFO.json'), ($info | ConvertTo-Json), [Text.UTF8Encoding]::new($false))
-    $archive = Join-Path $dist "$name.zip"
-    Compress-Archive -LiteralPath $folder -DestinationPath $archive -CompressionLevel Optimal -Force
-    $checksum = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-    [IO.File]::WriteAllText("$archive.sha256", "$checksum  $name.zip`n", [Text.UTF8Encoding]::new($false))
-    Write-Output $archive
-    Write-Output "$archive.sha256"
+    # Velopack builds the installer, a self-updating portable ZIP and the update feed. Releases
+    # already in dist/velopack (from `vpk download github`) let it add a delta update.
+    $out = Join-Path $dist 'velopack'
+    & vpk pack --packId Planetes --packVersion $Version --packDir $folder --mainExe planetes.exe --runtime win-x64 `
+        --packTitle Planetes --packAuthors 'Francisco Mejía' --icon (Join-Path $root 'app/assets/planetes.ico') `
+        --shortcuts StartMenuRoot --outputDir $out
+    if ($LASTEXITCODE -ne 0) { throw 'Velopack packaging failed (install it with: dotnet tool install -g vpk).' }
+    $sums = foreach ($file in 'Planetes-win-Setup.exe', 'Planetes-win-Portable.zip') {
+        "$((Get-FileHash -LiteralPath (Join-Path $out $file) -Algorithm SHA256).Hash.ToLowerInvariant())  $file"
+    }
+    [IO.File]::WriteAllText((Join-Path $out 'SHA256SUMS.txt'), ($sums -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
+    Remove-Item -LiteralPath $stage -Recurse -Force
+    Write-Output $out
 } finally { $env:CARGO_ENCODED_RUSTFLAGS = $previousFlags; Pop-Location }

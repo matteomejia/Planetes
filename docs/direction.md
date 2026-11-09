@@ -3,7 +3,7 @@
 ## Purpose
 
 A minimal, fast game launcher. Open it, find an installed game, launch it, and return to playing.
-The user should spend only a few seconds in Planetes. Windows is the primary platform; keep macOS compiling.
+The user should spend only a few seconds in Planetes. Windows only for now; macOS support was dropped on 2026-11-08.
 
 ## Goal and roadmap
 
@@ -12,8 +12,8 @@ Palette extension** over the same scanner. The main competitor is [Ludex](https:
 (MIT, C#; Steam, GOG, Epic and Xbox for Flow Launcher, Raycast and a source-only Command Palette build, with a
 save-folder focus). Planetes competes on easy installation, store coverage, launch reliability and speed.
 
-v0.1.0, with background mode and Steam and Epic support, was released on 2026-11-08 (the repository is still
-private). Agreed v1.0 scope, delivered incrementally:
+v0.1.0, with background mode and Steam and Epic support, was released on 2026-11-08. v0.2.0 adds the Velopack
+installer and automatic updates. Agreed v1.0 scope, delivered incrementally:
 
 1. **Background mode (implemented 2026-11-07):** Planetes stays resident and a global hotkey summons it. The hotkey is configurable;
    Alt+Space is the default. The window hides when it loses focus or after a launch, a tray icon offers rescan,
@@ -22,7 +22,8 @@ private). Agreed v1.0 scope, delivered incrementally:
    GOG, Xbox/Game Pass, Battle.net, EA app, Ubisoft Connect, Amazon Games, itch.io and manual entries.
 3. **Better results:** recently launched first, pinned favourites, merged duplicates across stores.
 4. **Per-game actions:** open install folder, open store page, uninstall through the store, from the keyboard.
-5. **Distribution:** installer and portable ZIP on WinGet, an opt-in update check, an ARM64 build.
+5. **Distribution:** a Velopack installer and self-updating portable ZIP (in progress 2026-11-08; update checks are on
+   by default with a setting to turn them off), later code signing, WinGet and an ARM64 build.
 6. **Launch:** README with a GIF and launch posts.
 
 ## First usable milestone (done)

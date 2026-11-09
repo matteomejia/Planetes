@@ -5,8 +5,11 @@ Open, search, select and launch through the game's store. Windows first, with po
 
 ## Windows download
 
-Open [Releases](https://github.com/matteomejia/Planetes/releases), download the Windows x64 portable ZIP,
-extract it and run `planetes.exe`. Rust is not required. The initial v0.1 build is unsigned and has no auto-updater.
+Open [Releases](https://github.com/matteomejia/Planetes/releases) and run `Planetes-win-Setup.exe`. It installs
+for your user only (no administrator prompt) into `%LocalAppData%\Planetes`, adds a Start menu shortcut and keeps
+Planetes up to date. Prefer no installer? Extract `Planetes-win-Portable.zip` anywhere and run `Planetes.exe`; it
+updates itself too. Builds are unsigned, so Windows SmartScreen may warn on first run (*More info → Run anyway*).
+v0.1.0 copies don't update themselves: install the current release once.
 
 Steam and Epic Games Launcher handle game startup. No account connection or API key is required in Planetes.
 
@@ -46,8 +49,12 @@ The tray menu offers Rescan, Start with Windows (a `--background` entry under `H
 Settings live in `%APPDATA%\Planetes\settings.json` and apply when the file is saved:
 
 ```json
-{ "hotkey": "ctrl+alt+space" }
+{ "hotkey": "ctrl+alt+space", "check_for_updates": true }
 ```
+
+Installed copies check GitHub Releases for a new version 30 seconds after starting and then daily. An update downloads
+in the background and installs the next time the launcher hides, restarting Planetes in the background. Set
+`"check_for_updates": false` to turn this off. Copies run from source (`cargo run`) never check.
 
 If the hotkey is taken (PowerToys uses Alt+Space for Command Palette or Run), the window says so; the tray icon and
 launching Planetes again still open it. Planetes hides after the OS accepts a launch request and keeps errors visible
@@ -67,7 +74,7 @@ scans exit successfully. Invalid CLI arguments and output failures return nonzer
 
 The workspace separates `crates/core` (shared records), `crates/stores` (discovery), `crates/cli` (JSON output), and
 `app` (Rune). `crates/launcher` constructs store URIs and performs OS handoff independently of the UI. Windows checks
-protocol associations and uses ShellExecuteExW without a command shell; macOS uses `/usr/bin/open` (not yet tested).
+protocol associations and uses ShellExecuteExW without a command shell.
 
 ### Detection boundaries
 
@@ -81,8 +88,7 @@ protocol associations and uses ShellExecuteExW without a command shell; macOS us
   Install directories must exist. `LauncherInstalled.dat` was verified locally but is not needed as a second source.
 - Malformed manifests, inaccessible libraries and missing install directories become warnings; other entries survive.
   A missing default Epic directory is normal. Failed Steam discovery and missing explicit paths produce warnings.
-- Windows is verified. Steam discovery supports macOS through `steamlocate`, but macOS builds are not yet tested.
-  Epic automatic discovery is currently Windows-only; an explicit native manifest directory works on other platforms.
+- Planetes supports Windows only for now.
 - Fixtures use synthetic identities and temporary directories, with the structure of real manifests. Live scans and
   raw machine manifests stay outside tracked files.
 

@@ -1,34 +1,38 @@
 # Releasing Planetes
 
 GitHub Releases attaches release notes and downloads to a version tag, such as `v0.1.0`.
-The tag identifies the source revision; the portable ZIP is the application users download. GitHub's automatic
+The tag identifies the source revision; `Planetes-win-Setup.exe` (or `Planetes-win-Portable.zip`) is the application
+users download, and the `.nupkg` files with `releases.win.json` are the update feed installed copies read. GitHub's automatic
 "Source code" archives are not compiled apps.
 
 ## Prepare and review
 
 1. Update the workspace version in `Cargo.toml` and add `docs/releases/vVERSION.md`.
-2. Merge the release-preparation changes after CI passes. CI runs Windows tests, Clippy, packaging and a macOS
-   compile check. Windows produces a `windows-portable` workflow artifact with the ZIP and SHA-256 file.
+2. Merge the release-preparation changes after CI passes. CI runs Windows tests, Clippy and
+   packaging. Windows produces a `windows-release` workflow artifact with the Velopack output: installer,
+   portable ZIP, full (and, after the first Velopack release, delta) update packages, feed and `SHA256SUMS.txt`.
 3. In GitHub Actions, run **Prepare draft release** on the source revision to release, supplying the matching
-   version (without `v`). The workflow repeats the checks and creates a draft with the tested Windows assets.
-4. Inspect the draft's notes and assets. Extract and run the ZIP, verify version information, and check Steam/Epic
-   startup, search, Escape, refresh and repeated application launches.
-5. Publish the reviewed draft when ready. This makes that release available to people who can access the repository.
+   version (without `v`). The workflow repeats the checks and creates a draft with the tested Windows assets
+   (`vpk upload github`, then the notes and `SHA256SUMS.txt`).
+4. Inspect the draft's notes and assets. Install with `Planetes-win-Setup.exe`, verify version information, and check
+   Steam/Epic startup, search, Escape, refresh and repeated application launches.
+5. Publish the reviewed draft when ready. Publishing is what delivers the update: installed copies only see
+   published releases.
 
 The workflow intentionally creates drafts and fails if that release already exists; it never overwrites a published
 release. An existing draft can be edited on the Releases page. If its source changes, rebuild and replace its assets
 before publication, and make sure its target still matches the tested source commit.
 
-Repository visibility is a separate decision. A published release in a private repository remains private to people
-with repository access. Making the repository public exposes its source history and published releases. Keep the
-repository private until the owner approves the visibility change.
+The repository is public, which installed copies rely on: they read releases without a token (GitHub allows 60
+unauthenticated API requests an hour per IP; Planetes makes one a day).
 
 See GitHub's [release documentation](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
 and [repository visibility documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
 
 ## Local packaging
 
-On Windows with the pinned Rust toolchain and C++ Build Tools:
+On Windows with the pinned Rust toolchain, C++ Build Tools, the .NET 8 SDK and Velopack's CLI
+(`dotnet tool install -g vpk --version 1.2.161`, matching the `velopack` crate):
 
 ```powershell
 pwsh -File scripts/package-windows.ps1
@@ -36,12 +40,19 @@ pwsh -File scripts/package-windows.ps1
 
 Packaging requires a clean checkout and takes its version from Cargo. Use `-AllowDirty` only for a local preview;
 `BUILD-INFO.json` records that condition. The script includes only the executable, portable instructions, licenses,
-dependency notices and build information. It produces `dist/Planetes-vVERSION-windows-x64.zip` and `.zip.sha256`.
+dependency notices and build information, then runs `vpk pack` into `dist/velopack`: `Planetes-win-Setup.exe`,
+`Planetes-win-Portable.zip`, `Planetes-VERSION-full.nupkg`, `releases.win.json` and `SHA256SUMS.txt`. Run
+`vpk download github --repoUrl https://github.com/matteomejia/Planetes --outputDir dist/velopack` first to also get a
+delta update from the latest release.
+
+To test an update locally: install one version from `dist/velopack`, package a higher version into the same folder,
+then start the installed `planetes.exe --background` with `PLANETES_UPDATE_SOURCE` set to that folder. It updates
+about 30 seconds later and restarts hidden. Uninstall from Windows Settings or with `Update.exe uninstall`.
 Machine-specific artifacts, benchmarks, debug symbols and source manifests are excluded.
 
 The x64 executable statically links the C runtime and embeds its icon, version data and per-monitor DPI manifest.
 Build-path remapping keeps this machine's user-folder paths out of the shipped executable. The app is unsigned;
-signing and automatic updates are future work.
+code signing is future work (`vpk pack` supports signing options).
 
 Some crates omit license texts from their published package. `packaging/licenses` contains copies from their exact
 published Git revisions, with source URLs. The notices generator checks these copies against the locked version;
