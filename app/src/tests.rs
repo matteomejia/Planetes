@@ -136,6 +136,66 @@ fn update_checks_stay_on_unless_turned_off() {
 }
 
 #[test]
+fn rows_show_when_a_game_was_last_played_and_for_how_long() {
+    let day = 24 * 60 * 60;
+    let mut game = fixtures_game();
+    let now = 1_000 * day;
+    assert_eq!(view::details(&game, now), None);
+    game.playtime_minutes = Some(42);
+    assert_eq!(view::details(&game, now).unwrap(), "42 min");
+    game.playtime_minutes = Some(10_943);
+    for (days, wanted) in [
+        (0, "today"),
+        (1, "yesterday"),
+        (13, "13 days ago"),
+        (20, "2 weeks ago"),
+        (90, "3 months ago"),
+        (800, "2 years ago"),
+    ] {
+        game.last_played = Some(now - days * day);
+        assert_eq!(
+            view::details(&game, now).unwrap(),
+            format!("{wanted} · 182 h")
+        );
+    }
+    // A clock set back never shows a future time.
+    game.last_played = Some(now + day);
+    assert!(view::details(&game, now).unwrap().starts_with("today"));
+}
+
+#[test]
+fn a_launch_from_planetes_counts_as_the_last_play() {
+    let mut games = vec![fixtures_game(), fixtures_game()];
+    games[0].last_played = Some(500);
+    games[1].store = planetes_core::StoreId::Epic;
+    let history = [
+        ("steam:100".to_string(), 400),
+        ("epic:100".to_string(), 700),
+    ]
+    .into();
+    history::merge_from(&mut games, &history);
+    assert_eq!(
+        games[0].last_played,
+        Some(500),
+        "the store saw a later play"
+    );
+    assert_eq!(games[1].last_played, Some(700));
+}
+
+fn fixtures_game() -> planetes_core::SourceGame {
+    let mut state = State::default();
+    fixtures::library(&mut state);
+    let mut game = state
+        .games
+        .into_iter()
+        .find(|g| g.source_id == "100")
+        .unwrap();
+    game.last_played = None;
+    game.playtime_minutes = None;
+    game
+}
+
+#[test]
 fn resident_escape_resets_the_search_instead_of_quitting() {
     let mut rt = runtime();
     rt.state.resident = true;

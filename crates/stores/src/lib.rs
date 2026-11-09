@@ -2,6 +2,7 @@
 
 mod epic;
 mod steam;
+mod steam_activity;
 mod steam_types;
 
 use std::{

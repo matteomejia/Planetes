@@ -22,6 +22,12 @@ pub struct SourceGame {
     pub epic_identity: Option<EpicIdentity>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon_path: Option<PathBuf>,
+    /// When the store last saw the game played, in Unix seconds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_played: Option<u64>,
+    /// Total playtime the store recorded, in minutes. Planetes doesn't track playtime itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub playtime_minutes: Option<u64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]

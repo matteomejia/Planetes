@@ -11,6 +11,7 @@ Ship a public v1.0 that wins users, stars and downloads: **the standalone app fi
 Palette extension** over the same scanner. The main competitor is [Ludex](https://github.com/Leocadio94/ludex)
 (MIT, C#; Steam, GOG, Epic and Xbox for Flow Launcher, Raycast and a source-only Command Palette build, with a
 save-folder focus). Planetes competes on easy installation, store coverage, launch reliability and speed.
+On 2026-11-08 the user moved the Command Palette extension ahead of the remaining v1.0 items, for visibility.
 
 v0.1.0, with background mode and Steam and Epic support, was released on 2026-11-08. v0.2.0 adds the Velopack
 installer and automatic updates. Agreed v1.0 scope, delivered incrementally:
@@ -20,9 +21,10 @@ installer and automatic updates. Agreed v1.0 scope, delivered incrementally:
    settings and quit, and starting with Windows is optional.
 2. **More stores:** as many as each adds without complicating the implementation, one store at a time. Candidates:
    GOG, Xbox/Game Pass, Battle.net, EA app, Ubisoft Connect, Amazon Games, itch.io and manual entries.
-3. **Better results:** recently launched first, pinned favourites, merged duplicates across stores.
+3. **Better results:** each row shows last played and Steam's recorded playtime (done 2026-11-08). Still to do:
+   recently launched first, pinned favourites, merged duplicates across stores.
 4. **Per-game actions:** open install folder, open store page, uninstall through the store, from the keyboard.
-5. **Distribution:** a Velopack installer and self-updating portable ZIP (in progress 2026-11-08; update checks are on
+5. **Distribution:** a Velopack installer and self-updating portable ZIP (released in v0.2.0; update checks are on
    by default with a setting to turn them off), later code signing, WinGet and an ARM64 build.
 6. **Launch:** README with a GIF and launch posts.
 

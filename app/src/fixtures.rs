@@ -40,6 +40,32 @@ pub(crate) fn library(s: &mut State) {
             install_dir: "fixture-game".into(),
             manifest_path: "fixture-manifest".into(),
             icon_path: None,
+            // A mix of recent, old and never-played games, as a real library has.
+            last_played: [
+                Some(2),
+                Some(0),
+                None,
+                Some(40),
+                Some(9),
+                Some(1),
+                None,
+                Some(400),
+                None,
+                Some(120),
+            ][i]
+                .map(|days: u64| crate::history::now() - days * 24 * 60 * 60),
+            playtime_minutes: [
+                Some(5_820),
+                Some(745),
+                None,
+                Some(4_829),
+                Some(10_943),
+                None,
+                None,
+                Some(1_188),
+                None,
+                Some(42),
+            ][i],
             epic_identity: (i == 5).then(|| EpicIdentity {
                 namespace: "fn".into(),
                 item_id: "fixture-item".into(),

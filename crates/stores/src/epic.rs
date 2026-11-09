@@ -109,6 +109,9 @@ pub(super) fn scan(dir: &Path, explicit: bool, report: &mut ScanReport) {
                 install_dir,
                 icon_path,
                 manifest_path: path,
+                // Epic keeps no local play history. The app adds launches made through Planetes.
+                last_played: None,
+                playtime_minutes: None,
                 epic_identity: Some(EpicIdentity {
                     namespace: manifest.catalog_namespace,
                     item_id: manifest.catalog_item_id,
