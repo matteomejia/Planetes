@@ -25,11 +25,26 @@ jobs:
         run: |
           dotnet tool install -g vpk --version 1.2.161
           "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
-      # The latest published release lets vpk build a delta update. There is none before the
-      # first Velopack release, so a failed download is fine.
+      # Seed delta updates only from an older version. Documentation PRs and post-release
+      # main builds can have the same version as the latest release; vpk rejects that seed.
+      # There is none before the first release, so a failed lookup/download is fine.
       - name: Download previous release
         continue-on-error: true
-        run: vpk download github --repoUrl "https://github.com/${{ github.repository }}" --outputDir dist/velopack
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $metadata = cargo metadata --locked --no-deps --format-version 1 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Cargo metadata failed.' }
+          $version = ($metadata.packages | Where-Object name -eq 'planetes').version
+          $tag = gh api "repos/${{ github.repository }}/releases/latest" --jq '.tag_name'
+          if ($LASTEXITCODE -ne 0) { throw 'Could not find the latest published release.' }
+          if ([version]$tag.TrimStart('v') -lt [version]$version) {
+            vpk download github --repoUrl "https://github.com/${{ github.repository }}" --outputDir dist/velopack
+            if ($LASTEXITCODE -ne 0) { throw 'Previous release download failed.' }
+          } else {
+            Write-Host "Skipping delta seed: latest release $tag is not older than $version."
+          }
       - name: Build installer and update packages
         shell: pwsh
         run: ./scripts/package-windows.ps1
