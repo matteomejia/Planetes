@@ -57,6 +57,13 @@ header. The search field is the top of the window, results are dense single-line
 plain status line holds the count and key hints. Neutral greys carry the UI; one blue accent marks the caret, focus
 and selection. Selection and hover change instantly.
 
+On 2026-11-08 the user asked for a slightly fancier UI using more space, with cover art. The window grew to
+860×520 with a preview panel beside the results: the selected game's key art runs edge to edge and fades into the
+panel, its logo sits on the art, and the title, store, last played and playtime follow. The art is what Steam
+already caches for its own library. Epic keeps only links to its art (in the launcher's catalog cache), so the user
+chose to download each Epic game's art once from Epic's own CDN, with a setting to turn that off. Games without
+art show their icon over a blurred copy. While new art decodes, the previous game stays up so the panel never flashes empty.
+
 Rune's pinned source supports theme palettes, shadows, rounded clipping, image/icon rendering, springs and blur.
 Use these selectively, with Windows verification. In-window backdrop blur does not by itself establish desktop
 translucency or native Windows acrylic support. Decorative motion must never delay typing, selection or launching;

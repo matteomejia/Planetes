@@ -36,6 +36,11 @@ pub(crate) struct State {
     pub focused: bool,
     /// A downloaded update, applied the next time the launcher hides.
     pub pending_update: Option<crate::update::Pending>,
+    /// Art requested for the selected game, and the art on screen until that decodes.
+    pub preview: Option<crate::preview::Preview>,
+    pub shown: Option<crate::preview::Preview>,
+    /// Art URLs already requested this session.
+    pub art_tried: std::collections::HashSet<String>,
 }
 
 impl Default for State {
@@ -65,6 +70,9 @@ impl Default for State {
             last_scan: None,
             focused: false,
             pending_update: None,
+            preview: None,
+            shown: None,
+            art_tried: Default::default(),
         }
     }
 }
@@ -90,6 +98,9 @@ impl State {
             self.selected = position;
         }
         self.load_icons();
+        if let Some(handle) = self.handle.clone() {
+            crate::art::fetch_missing(handle, &self.games, &mut self.art_tried);
+        }
     }
 
     fn selected_game(&self) -> Option<&SourceGame> {
@@ -245,6 +256,7 @@ impl State {
         std::thread::spawn(move || {
             let mut report = planetes_stores::scan(&Default::default());
             crate::history::merge(&mut report.games);
+            crate::art::attach_cached(&mut report.games);
             handle.update(move |state, tx| {
                 state.apply_report(report);
                 tx.instant();
@@ -270,15 +282,38 @@ impl State {
             let key = (game.store, game.source_id.clone());
             let image = previous
                 .remove(&key)
-                .unwrap_or_else(|| cache.app_icon_scaled(path, 32.0, 2.0));
+                .unwrap_or_else(|| icon_image(cache, path, 32.0));
             self.icons.insert(key, image);
         }
+    }
+}
+
+/// A game's icon: an image file (Steam's cached library icon) decodes as it is; an
+/// executable or `.ico` gives its first icon, rasterized at 2x `size`.
+pub(crate) fn icon_image(
+    cache: &rune::ImageCache,
+    path: &std::path::Path,
+    size: f32,
+) -> rune::Image {
+    let image_file = path.extension().is_some_and(|ext| {
+        ["jpg", "jpeg", "png"]
+            .iter()
+            .any(|known| ext.eq_ignore_ascii_case(known))
+    });
+    if image_file {
+        cache.file(path, size, 2.0)
+    } else {
+        cache.app_icon_scaled(path, size, 2.0)
     }
 }
 
 pub(crate) fn setup(state: &mut State, waker: rune::Waker) {
     state.image_cache = Some(rune::ImageCache::new(waker));
     state.load_icons();
+    // Scenes are set before the cache exists; let snapshots show their art.
+    if rune::tooling::headless_run().is_some() {
+        crate::preview::settle(state);
+    }
 }
 
 pub(crate) fn poll(state: &mut State, _: f64, tx: &mut Tx) -> bool {
@@ -289,7 +324,8 @@ pub(crate) fn poll(state: &mut State, _: f64, tx: &mut Tx) -> bool {
         .values()
         .filter(|image| image.is_ready())
         .count();
-    let changed = ready != state.icons_ready;
+    let art = crate::preview::poll(state);
+    let changed = ready != state.icons_ready || art;
     state.icons_ready = ready;
     let Some(handle) = state.handle.clone() else {
         return changed;

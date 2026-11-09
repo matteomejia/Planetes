@@ -4,6 +4,7 @@ use planetes_core::{EpicIdentity, ScanReport, SourceGame, StoreId};
 type Scene = (&'static str, fn(&mut State));
 pub(crate) const SCENES: &[Scene] = &[
     ("library", library),
+    ("no-art", no_art),
     ("empty", empty),
     ("loading", loading),
     ("error", error),
@@ -39,7 +40,7 @@ pub(crate) fn library(s: &mut State) {
             title: (*name).into(),
             install_dir: "fixture-game".into(),
             manifest_path: "fixture-manifest".into(),
-            icon_path: None,
+            icon_path: fixture_art(i, "icon.exe").or_else(|| fixture_art(i, "icon.jpg")),
             // A mix of recent, old and never-played games, as a real library has.
             last_played: [
                 Some(2),
@@ -66,6 +67,12 @@ pub(crate) fn library(s: &mut State) {
                 None,
                 Some(42),
             ][i],
+            // Screenshots can borrow real art: `PLANETES_FIXTURE_ART` names a folder holding
+            // `<row>-hero.jpg`, `<row>-logo.png` and `<row>-icon.exe` or `.jpg`. Tests and scenes run fine without it.
+            hero_path: fixture_art(i, "hero.jpg"),
+            logo_path: fixture_art(i, "logo.png"),
+            hero_url: None,
+            logo_url: None,
             epic_identity: (i == 5).then(|| EpicIdentity {
                 namespace: "fn".into(),
                 item_id: "fixture-item".into(),
@@ -76,6 +83,17 @@ pub(crate) fn library(s: &mut State) {
         games,
         warnings: Vec::new(),
     });
+}
+fn fixture_art(row: usize, name: &str) -> Option<std::path::PathBuf> {
+    let path = std::path::Path::new(&std::env::var_os("PLANETES_FIXTURE_ART")?)
+        .join(format!("{row}-{name}"));
+    path.is_file().then_some(path)
+}
+/// A game without local art (Epic): the panel's icon fallback.
+fn no_art(s: &mut State) {
+    library(s);
+    s.query.text = "fortnite".into();
+    s.filter();
 }
 fn empty(s: &mut State) {
     s.handle = None;

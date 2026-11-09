@@ -38,6 +38,18 @@ fn steam_icon_discovery_uses_only_existing_cached_icons_with_valid_hashes() {
                 .icon_path
                 .is_none()
         );
+        // Without Steam's .ico, the small icon its library view caches stands in.
+        let library = temp.path().join("appcache/librarycache/100");
+        fs::create_dir_all(&library).unwrap();
+        let small = library.join(format!("{hash}.jpg"));
+        fs::write(&small, b"fixture").unwrap();
+        assert_eq!(
+            scan(&steam_options(temp.path())).games[0]
+                .icon_path
+                .as_ref(),
+            Some(&small)
+        );
+        fs::remove_file(&small).unwrap();
         fs::write(
             temp.path().join("appcache/appinfo.vdf"),
             appinfo::appinfo_with_icon(version, &[(100, "Game")], Some("../unexpected")),
@@ -130,6 +142,41 @@ fn steam_play_history_comes_from_the_account_that_played_last() {
         ]
     );
     assert_eq!(report.warnings.len(), 1, "{:?}", report.warnings);
+}
+
+#[test]
+fn steam_art_comes_from_either_library_cache_layout() {
+    let temp = TempDir::new().unwrap();
+    for id in [100, 101, 102] {
+        steam_app(temp.path(), id, 4, true);
+    }
+    libraries(temp.path(), &[temp.path()]);
+    let cache = temp.path().join("appcache/librarycache");
+    // Older clients: files directly in the app's folder.
+    fs::create_dir_all(cache.join("100")).unwrap();
+    fs::write(cache.join("100/library_hero.jpg"), b"fixture").unwrap();
+    fs::write(cache.join("100/logo.png"), b"fixture").unwrap();
+    // Newer clients: each file in a folder named by its hash.
+    fs::create_dir_all(cache.join("101/aaaa")).unwrap();
+    fs::create_dir_all(cache.join("101/bbbb")).unwrap();
+    fs::write(cache.join("101/bbbb/library_hero.jpg"), b"fixture").unwrap();
+    let report = scan(&steam_options(temp.path()));
+    let art: Vec<_> = report
+        .games
+        .iter()
+        .map(|g| (g.hero_path.clone(), g.logo_path.clone()))
+        .collect();
+    assert_eq!(
+        art,
+        [
+            (
+                Some(cache.join("100/library_hero.jpg")),
+                Some(cache.join("100/logo.png"))
+            ),
+            (Some(cache.join("101/bbbb/library_hero.jpg")), None),
+            (None, None),
+        ]
+    );
 }
 
 #[test]
@@ -346,6 +393,64 @@ fn epic_retains_valid_entries_when_manifests_are_bad_or_stale() {
     let report = scan(&epic_options(temp.path()));
     assert_eq!(report.games.len(), 1);
     assert_eq!(report.warnings.len(), 4);
+}
+
+#[test]
+fn epic_art_links_come_from_the_launchers_catalog_cache() {
+    use base64::Engine;
+    let temp = TempDir::new().unwrap();
+    let manifests = temp.path().join("Manifests");
+    fs::create_dir_all(&manifests).unwrap();
+    fs::create_dir(manifests.join("game")).unwrap();
+    epic_manifest(
+        &manifests,
+        "art.item",
+        json!({"AppName": "art", "CatalogItemId": "with-art"}),
+    );
+    epic_manifest(
+        &manifests,
+        "plain.item",
+        json!({"AppName": "plain", "CatalogItemId": "elsewhere"}),
+    );
+    let catalog = json!([
+        {"id": "with-art", "keyImages": [
+            {"type": "DieselGameBoxTall", "url": "https://cdn1.epicgames.com/tall"},
+            {"type": "DieselGameBox", "url": "https://cdn1.epicgames.com/wide"},
+            {"type": "DieselGameBoxLogo", "url": "https://example.org/logo"}
+        ]},
+        {"id": "elsewhere", "keyImages": [{"type": "DieselGameBox", "url": "http://cdn1.epicgames.com/x"}]}
+    ]);
+    fs::create_dir_all(temp.path().join("Catalog")).unwrap();
+    fs::write(
+        temp.path().join("Catalog/catcache.bin"),
+        base64::engine::general_purpose::STANDARD.encode(catalog.to_string()),
+    )
+    .unwrap();
+    let report = scan(&epic_options(&manifests));
+    assert!(report.warnings.is_empty(), "{:?}", report.warnings);
+    let art: Vec<_> = report
+        .games
+        .iter()
+        .map(|g| {
+            (
+                g.source_id.as_str(),
+                g.hero_url.as_deref(),
+                g.logo_url.as_deref(),
+            )
+        })
+        .collect();
+    // Links off Epic's HTTPS CDN are ignored.
+    assert_eq!(
+        art,
+        [
+            ("art", Some("https://cdn1.epicgames.com/wide"), None),
+            ("plain", None, None)
+        ]
+    );
+    fs::write(temp.path().join("Catalog/catcache.bin"), "not base64!").unwrap();
+    let report = scan(&epic_options(&manifests));
+    assert_eq!(report.games.len(), 2, "a broken cache keeps the games");
+    assert_eq!(report.warnings.len(), 1);
 }
 
 #[test]

@@ -1,6 +1,7 @@
 //! Read-only local discovery. No account sessions, network calls, or launcher writes.
 
 mod epic;
+mod epic_catalog;
 mod steam;
 mod steam_activity;
 mod steam_types;

@@ -4,7 +4,10 @@ use planetes_core::{ScanReport, StoreId};
 
 pub(super) struct Metadata {
     pub kind: Option<String>,
+    /// Names Steam's `steam/games/<hash>.ico`, saved only for some games.
     pub icon_hash: Option<String>,
+    /// Names the small icon in `appcache/librarycache/<id>/`, present for every cached game.
+    pub library_icon_hash: Option<String>,
 }
 
 pub(super) fn read(root: &Path, report: &mut ScanReport) -> HashMap<u32, Metadata> {
@@ -51,17 +54,19 @@ fn parse(data: &[u8]) -> Result<HashMap<u32, Metadata>, String> {
                         kind: app
                             .get_str(&["appinfo", "common", "type"])
                             .map(str::to_ascii_lowercase),
-                        icon_hash: app
-                            .get_str(&["appinfo", "common", "clienticon"])
-                            .or_else(|| app.get_str(&["appinfo", "common", "icon"]))
-                            .filter(|hash| {
-                                hash.len() == 40 && hash.bytes().all(|b| b.is_ascii_hexdigit())
-                            })
-                            .map(str::to_owned),
+                        icon_hash: hash(app.get_str(&["appinfo", "common", "clienticon"]))
+                            .or_else(|| hash(app.get_str(&["appinfo", "common", "icon"]))),
+                        library_icon_hash: hash(app.get_str(&["appinfo", "common", "icon"])),
                     },
                 );
             }
         }
     }
     Ok(result)
+}
+
+fn hash(value: Option<&str>) -> Option<String> {
+    value
+        .filter(|hash| hash.len() == 40 && hash.bytes().all(|b| b.is_ascii_hexdigit()))
+        .map(str::to_owned)
 }

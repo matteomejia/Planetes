@@ -99,15 +99,54 @@ pub(super) fn scan(root: Option<&Path>, report: &mut ScanReport) {
                     install_dir,
                     manifest_path: manifest,
                     epic_identity: None,
-                    icon_path: types
-                        .get(&id)
-                        .and_then(|metadata| metadata.icon_hash.as_ref())
-                        .map(|hash| steam.path().join("steam/games").join(format!("{hash}.ico")))
-                        .filter(|path| path.is_file()),
+                    icon_path: icon(steam.path(), id, types.get(&id)),
                     last_played: played.last_played,
                     playtime_minutes: played.playtime_minutes,
+                    hero_path: library_art(steam.path(), id, "library_hero.jpg"),
+                    logo_path: library_art(steam.path(), id, "logo.png"),
+                    hero_url: None,
+                    logo_url: None,
                 });
             }
         }
     }
+}
+
+/// Artwork the Steam client has already cached for its library view, in
+/// `appcache/librarycache/<id>/`. Older clients keep each file there directly; newer ones put
+/// it in a subfolder named by the image's hash. Nothing is downloaded.
+fn library_art(root: &Path, id: u32, name: &str) -> Option<std::path::PathBuf> {
+    let dir = root.join("appcache/librarycache").join(id.to_string());
+    let direct = dir.join(name);
+    if direct.is_file() {
+        return Some(direct);
+    }
+    let mut nested: Vec<_> = std::fs::read_dir(&dir)
+        .ok()?
+        .flatten()
+        .map(|entry| entry.path().join(name))
+        .filter(|path| path.is_file())
+        .collect();
+    nested.sort();
+    nested.into_iter().next()
+}
+
+/// Steam's own icon file when it saved one (only some games get it, for example when a
+/// shortcut was made), otherwise the small icon its library view caches for every game.
+/// Not the game's executable: launcher stubs and anti-cheat wrappers carry other icons.
+fn icon(
+    root: &Path,
+    id: u32,
+    metadata: Option<&super::steam_types::Metadata>,
+) -> Option<std::path::PathBuf> {
+    let metadata = metadata?;
+    metadata
+        .icon_hash
+        .as_ref()
+        .map(|hash| root.join("steam/games").join(format!("{hash}.ico")))
+        .filter(|path| path.is_file())
+        .or_else(|| {
+            let hash = metadata.library_icon_hash.as_ref()?;
+            library_art(root, id, &format!("{hash}.jpg"))
+        })
 }

@@ -12,6 +12,10 @@ fn game(store: StoreId, id: &str) -> SourceGame {
         icon_path: None,
         last_played: None,
         playtime_minutes: None,
+        hero_path: None,
+        logo_path: None,
+        hero_url: None,
+        logo_url: None,
     }
 }
 

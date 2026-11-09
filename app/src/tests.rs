@@ -2,7 +2,7 @@ use super::*;
 use rune::{App, Env, KeyEvent, Mods, Runtime};
 
 fn runtime() -> Runtime<State> {
-    let mut rt = App::new(spec()).headless_runtime((580.0, 480.0), Env::new(true, 1.0));
+    let mut rt = App::new(spec()).headless_runtime(SIZE, Env::new(true, 1.0));
     fixtures::library(&mut rt.state);
     rt.frame(0.0);
     rt
@@ -164,6 +164,29 @@ fn rows_show_when_a_game_was_last_played_and_for_how_long() {
 }
 
 #[test]
+fn the_preview_follows_the_selection_and_clears_without_results() {
+    let mut rt = runtime();
+    let selected = |rt: &Runtime<State>| {
+        let game = &rt.state.games[rt.state.results[rt.state.selected]];
+        (game.store, game.source_id.clone())
+    };
+    let shown = |rt: &Runtime<State>| {
+        let preview = rt.state.shown.as_ref().expect("a game is previewed");
+        let (store, id) = preview.key();
+        (store, id.to_string())
+    };
+    assert_eq!(shown(&rt), selected(&rt));
+    assert!(rt.find("preview-title").is_some());
+    key(&mut rt, Key::Down);
+    rt.frame(0.0);
+    assert_eq!(shown(&rt), selected(&rt));
+    key(&mut rt, Key::Text("zzzz".into()));
+    rt.frame(0.0);
+    assert!(rt.state.shown.is_none());
+    assert!(rt.find("preview-title").is_none());
+}
+
+#[test]
 fn a_launch_from_planetes_counts_as_the_last_play() {
     let mut games = vec![fixtures_game(), fixtures_game()];
     games[0].last_played = Some(500);
@@ -193,6 +216,17 @@ fn fixtures_game() -> planetes_core::SourceGame {
     game.last_played = None;
     game.playtime_minutes = None;
     game
+}
+
+#[test]
+fn art_downloads_stay_on_unless_turned_off_and_accept_only_images() {
+    use art::{downloads_from_json, is_image};
+    assert!(downloads_from_json("{}"));
+    assert!(downloads_from_json("{broken"));
+    assert!(!downloads_from_json(r#"{"download_art": false}"#));
+    assert!(is_image(&[0xff, 0xd8, 0xff, 0xe0]));
+    assert!(is_image(b"\x89PNG\r\n\x1a\n...."));
+    assert!(!is_image(b"<html>"));
 }
 
 #[test]
