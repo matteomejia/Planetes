@@ -74,7 +74,7 @@ scans exit successfully. Invalid CLI arguments and output failures return nonzer
 
 The workspace separates `crates/core` (shared records), `crates/stores` (discovery), `crates/cli` (JSON output), and
 `app` (Rune). `crates/launcher` constructs store URIs and performs OS handoff independently of the UI. Windows checks
-protocol associations and uses ShellExecuteExW without a command shell; macOS uses `/usr/bin/open` (not yet tested).
+protocol associations and uses ShellExecuteExW without a command shell.
 
 ### Detection boundaries
 
@@ -88,8 +88,7 @@ protocol associations and uses ShellExecuteExW without a command shell; macOS us
   Install directories must exist. `LauncherInstalled.dat` was verified locally but is not needed as a second source.
 - Malformed manifests, inaccessible libraries and missing install directories become warnings; other entries survive.
   A missing default Epic directory is normal. Failed Steam discovery and missing explicit paths produce warnings.
-- Windows is verified. Steam discovery supports macOS through `steamlocate`, but macOS builds are not yet tested.
-  Epic automatic discovery is currently Windows-only; an explicit native manifest directory works on other platforms.
+- Planetes supports Windows only for now.
 - Fixtures use synthetic identities and temporary directories, with the structure of real manifests. Live scans and
   raw machine manifests stay outside tracked files.
 

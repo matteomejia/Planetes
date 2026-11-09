@@ -8,8 +8,8 @@ users download, and the `.nupkg` files with `releases.win.json` are the update f
 ## Prepare and review
 
 1. Update the workspace version in `Cargo.toml` and add `docs/releases/vVERSION.md`.
-2. Merge the release-preparation changes after CI passes. CI runs Windows tests, Clippy, packaging and a macOS
-   compile check. Windows produces a `windows-release` workflow artifact with the Velopack output: installer,
+2. Merge the release-preparation changes after CI passes. CI runs Windows tests, Clippy and
+   packaging. Windows produces a `windows-release` workflow artifact with the Velopack output: installer,
    portable ZIP, full (and, after the first Velopack release, delta) update packages, feed and `SHA256SUMS.txt`.
 3. In GitHub Actions, run **Prepare draft release** on the source revision to release, supplying the matching
    version (without `v`). The workflow repeats the checks and creates a draft with the tested Windows assets

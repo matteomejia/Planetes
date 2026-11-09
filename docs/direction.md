@@ -3,7 +3,7 @@
 ## Purpose
 
 A minimal, fast game launcher. Open it, find an installed game, launch it, and return to playing.
-The user should spend only a few seconds in Planetes. Windows is the primary platform; keep macOS compiling.
+The user should spend only a few seconds in Planetes. Windows only for now; macOS support was dropped on 2026-11-08.
 
 ## Goal and roadmap
 

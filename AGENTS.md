@@ -25,7 +25,8 @@ easy installation, store coverage, launch reliability and speed rather than on s
   with store labels, plain status line, no gradients/glows/keycaps, no title bar. Bundled Rune font for now.
   Acrylic is deferred. Verify visual changes on Windows.
 - **Defer library-browser features:** cover grids, detail pages, collections and playtime tracking.
-- **Windows is the primary platform.** Keep macOS compiling, but features and testing target Windows.
+- **Windows only for now.** macOS was dropped on 2026-11-08 (no releases, no CI check). Shared crates may keep
+  existing portable code, but nothing needs to compile elsewhere.
 - **Installed games only**: no store logins or ownership APIs.
 - **No controller/gamepad support yet.**
 - **No required API keys.** Artwork services, including optional SteamGridDB, and IGDB are deferred.
@@ -35,8 +36,8 @@ easy installation, store coverage, launch reliability and speed rather than on s
 
 1. v0.1.0 (background mode, Steam and Epic) was published on 2026-11-08 after the user tested it, tray menu
    included. Default hotkey Alt+Space; PowerToys holds it on this desktop, so the user sets another. Next: more
-   stores (GOG first). v1.0 scope is in `docs/direction.md`. The repo stays private until the owner approves a
-   visibility change; draft each release and publish only with the owner's approval. See `docs/releasing.md`.
+   stores (GOG first). v1.0 scope is in `docs/direction.md`. The repo is public (made so 2026-11-08); draft each
+   release and publish only with the owner's approval. See `docs/releasing.md`.
 2. Release startup/search have been measured with the opt-in native benchmark; avoid adding caching without evidence.
 3. Add stores incrementally while preserving the minimal search-and-launch interaction.
 4. After the app's v1.0: a Command Palette extension over the same scanner.
