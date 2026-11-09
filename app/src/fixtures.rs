@@ -4,6 +4,7 @@ use planetes_core::{EpicIdentity, ScanReport, SourceGame, StoreId};
 type Scene = (&'static str, fn(&mut State));
 pub(crate) const SCENES: &[Scene] = &[
     ("library", library),
+    ("readme", readme),
     ("no-art", no_art),
     ("empty", empty),
     ("loading", loading),
@@ -88,6 +89,25 @@ fn fixture_art(row: usize, name: &str) -> Option<std::path::PathBuf> {
     let path = std::path::Path::new(&std::env::var_os("PLANETES_FIXTURE_ART")?)
         .join(format!("{row}-{name}"));
     path.is_file().then_some(path)
+}
+/// A documentation library with real assets supplied through PLANETES_FIXTURE_ART.
+/// Keep personal library contents and play history out of the public screenshot.
+fn readme(s: &mut State) {
+    library(s);
+    for game in &mut s.games {
+        match game.title.as_str() {
+            "Control" => game.title = "Counter-Strike 2".into(),
+            "Hades II" => game.title = "HELLDIVERS 2".into(),
+            _ => (),
+        }
+    }
+    s.games.sort_by_key(|g| g.title.to_lowercase());
+    s.filter();
+    s.selected = s
+        .results
+        .iter()
+        .position(|&i| s.games[i].title == "Baldur's Gate 3")
+        .unwrap();
 }
 /// A game without local art (Epic): the panel's icon fallback.
 fn no_art(s: &mut State) {
