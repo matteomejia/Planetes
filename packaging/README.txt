@@ -15,9 +15,10 @@ To change the hotkey, choose Edit settings in the tray menu, for example:
 The tray menu can also start Planetes with Windows, and Quit exits it.
 Opening Planetes again shows the existing window instead of opening a duplicate.
 
-No accounts, API keys or artwork downloads are needed. Planetes checks GitHub for a new
-version after it starts and then daily, and installs it the next time its window hides. To turn
-this off, add "check_for_updates": false to the settings file.
+No accounts or API keys are needed. Planetes checks GitHub for a new version after it starts
+and then daily, and installs it the next time its window hides. To turn this off, add
+"check_for_updates": false to the settings file. Epic games' art is downloaded once from Epic's
+own site; add "download_art": false to turn that off.
 This build is unsigned; Windows may identify its publisher as unknown.
 
 Updates and source: https://github.com/matteomejia/Planetes

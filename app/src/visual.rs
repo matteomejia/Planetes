@@ -1,4 +1,4 @@
-//! Small, app-owned visual vocabulary; no remote artwork or runtime theme dependencies.
+//! Small, app-owned visual vocabulary; no runtime theme dependencies.
 use rune::{Color, El, TextStyle, el, text};
 
 #[derive(Clone, Copy)]
@@ -36,6 +36,7 @@ fn hex(value: &str) -> Color {
 }
 
 pub const QUERY: TextStyle = TextStyle::new(20.0, 400.0).lh(28.0);
+pub const TITLE: TextStyle = TextStyle::new(20.0, 600.0).lh(26.0);
 pub const BODY: TextStyle = TextStyle::new(14.0, 400.0).lh(20.0);
 pub const SMALL: TextStyle = TextStyle::new(12.0, 400.0).lh(16.0);
 pub const SMALL_STRONG: TextStyle = TextStyle::new(12.0, 500.0).lh(16.0);
@@ -60,7 +61,7 @@ pub fn monogram(title: &str, size: f32) -> El {
         .fill(p.tile)
         .child(
             text(letter)
-                .font(TextStyle::new(11.0, 500.0))
+                .font(TextStyle::new((size * 0.55).round().max(11.0), 500.0))
                 .color(p.muted),
         )
 }

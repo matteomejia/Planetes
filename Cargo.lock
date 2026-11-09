@@ -2614,7 +2614,7 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
 name = "planetes"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "planetes-core",
  "planetes-launcher",
@@ -2624,6 +2624,7 @@ dependencies = [
  "rune",
  "rune-kit",
  "serde_json",
+ "ureq",
  "velopack",
  "windows-sys 0.61.2",
  "winresource",
@@ -2631,7 +2632,7 @@ dependencies = [
 
 [[package]]
 name = "planetes-cli"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2642,14 +2643,14 @@ dependencies = [
 
 [[package]]
 name = "planetes-core"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "planetes-launcher"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "percent-encoding",
  "planetes-core",
@@ -2659,8 +2660,9 @@ dependencies = [
 
 [[package]]
 name = "planetes-stores"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
+ "base64 0.22.1",
  "planetes-core",
  "serde",
  "serde_json",

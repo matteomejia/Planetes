@@ -53,6 +53,7 @@ pub(super) fn scan(dir: &Path, explicit: bool, report: &mut ScanReport) {
         }
     }
     paths.sort();
+    let catalog = super::epic_catalog::read(dir, report);
     for path in paths {
         let manifest = match fs::read(&path).map_err(|e| e.to_string()).and_then(|data| {
             // Tolerate launchers writing UTF-8 with a BOM.
@@ -95,6 +96,10 @@ pub(super) fn scan(dir: &Path, explicit: bool, report: &mut ScanReport) {
             continue;
         }
         if super::installed_directory(&install_dir, &path, StoreId::Epic, report) {
+            let art = catalog
+                .get(&manifest.catalog_item_id)
+                .cloned()
+                .unwrap_or_default();
             let relative = Path::new(&manifest.launch_executable);
             let icon_path = (!relative.as_os_str().is_empty()
                 && relative
@@ -112,6 +117,11 @@ pub(super) fn scan(dir: &Path, explicit: bool, report: &mut ScanReport) {
                 // Epic keeps no local play history. The app adds launches made through Planetes.
                 last_played: None,
                 playtime_minutes: None,
+                // Epic keeps only links to its art; the app downloads and caches the images.
+                hero_path: None,
+                logo_path: None,
+                hero_url: art.hero_url,
+                logo_url: art.logo_url,
                 epic_identity: Some(EpicIdentity {
                     namespace: manifest.catalog_namespace,
                     item_id: manifest.catalog_item_id,

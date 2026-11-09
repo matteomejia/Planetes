@@ -4,7 +4,7 @@ members = ["crates/core", "crates/stores", "crates/launcher", "crates/cli", "app
 default-members = ["app"]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 license = "MIT"
 rust-version = "1.99"
@@ -17,6 +17,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 steamlocate = "2.1.1"
 steam-vdf-parser = "0.1.2"
+# Already built for Rune (resvg); reads the Epic launcher's catalog cache.
+base64 = "0.22.1"
 percent-encoding = "2"
 windows-sys = { version = "0.61", features = ["Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_System_Com"] }
 clap = { version = "4", features = ["derive"] }

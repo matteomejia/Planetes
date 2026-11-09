@@ -33,6 +33,8 @@ cargo run --locked --quiet -p planetes-cli -- --store epic --epic-manifests 'C:\
 
 # Deterministic UI preview (fixture data; no external game launch).
 cargo run --locked -p planetes -- --scene library --snap artifacts/launcher.png
+# Optional: borrow real art for the preview from a folder of <row>-hero.jpg, <row>-logo.png, <row>-icon.exe.
+$env:PLANETES_FIXTURE_ART = 'artifacts/art'; cargo run --locked -p planetes -- --scene no-art --snap artifacts/no-art.png
 
 cargo fmt --all -- --check
 cargo check --locked --workspace --all-targets
@@ -49,26 +51,33 @@ The tray menu offers Rescan, Start with Windows (a `--background` entry under `H
 Settings live in `%APPDATA%\Planetes\settings.json` and apply when the file is saved:
 
 ```json
-{ "hotkey": "ctrl+alt+space", "check_for_updates": true }
+{ "hotkey": "ctrl+alt+space", "check_for_updates": true, "download_art": true }
 ```
 
 Installed copies check GitHub Releases for a new version 30 seconds after starting and then daily. An update downloads
 in the background and installs the next time the launcher hides, restarting Planetes in the background. Set
 `"check_for_updates": false` to turn this off. Copies run from source (`cargo run`) never check.
 
+Epic keeps links to its key art but not the images, so Planetes downloads each installed Epic game's art once from
+Epic's own CDN (HTTPS, no login or key) into `%LOCALAPPDATA%\Planetes\art`, about 250 KB a game. Set
+`"download_art": false` to stop downloads; art already saved is still shown.
+
 If the hotkey is taken (PowerToys uses Alt+Space for Command Palette or Run), the window says so; the tray icon and
 launching Planetes again still open it. Planetes hides after the OS accepts a launch request and keeps errors visible
 on failure. This is a handoff to the store client, not confirmation that the game started. No login, cover service
 or playtime tracker is used.
 
-Each row shows when the game was last played and, for Steam, the playtime Steam recorded. Epic keeps no local play
-history, so Epic games show their last launch from Planetes, saved in `%APPDATA%\Planetes\history.json` (launch
-times only).
+A preview panel beside the results shows the selected game's key art and logo, when it was last played and, for
+Steam, the playtime Steam recorded. Epic keeps no local play history, so Epic games show their last launch from
+Planetes, saved in `%APPDATA%\Planetes\history.json` (launch times only).
 
 The neutral grey UI uses one blue accent, local Steam icon caches and Epic executable icons, with letter fallbacks.
-Icon reads and extraction run on Rune's image workers, retaining at most 128 64px icon rasters (about 2 MiB plus
-mip levels). No artwork is downloaded. Selection and hover transitions respect the system's reduced-motion setting;
-search results update immediately. Steam and Epic game startup have been validated on Windows.
+Steam key art and logos are the files Steam already caches for its library (`appcache/librarycache`); Epic art
+comes from the links in the Epic launcher's catalog cache (`Data/Catalog/catcache.bin`), downloaded as described
+above. Until then, or without art, a game shows its icon over a blurred copy. Icon reads and extraction run on
+Rune's image workers, retaining at most 128 64px icon rasters (about 2 MiB plus mip levels) and the art of at most
+two games. Selection and hover transitions respect the system's reduced-motion setting; search results update
+immediately. Steam and Epic game startup have been validated on Windows.
 Launching Planetes again while it runs shows the existing window.
 
 The scanner reads launcher metadata and checks install directories. It does not log in, contact store APIs, launch

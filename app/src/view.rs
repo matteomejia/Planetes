@@ -1,13 +1,13 @@
 use crate::{state::State, visual::*};
-use planetes_core::{SourceGame, StoreId};
+use planetes_core::SourceGame;
 use rune::{
-    Align, Cx, El, Key, KeyEvent, ScrollSpec, Spring, SurfaceFit, Tx, col, el, row, spacer, text,
+    Cx, El, Key, KeyEvent, ScrollSpec, Spring, SurfaceFit, Tx, col, el, row, spacer, text,
     text_input,
 };
 
 const ICON: f32 = 20.0;
-/// Fits the widest store name, "Steam", in the small font.
-const STORE_COLUMN: f32 = 40.0;
+/// The results column; the preview panel takes the rest of the window.
+const LIST_WIDTH: f32 = 360.0;
 
 pub(crate) fn view(s: &State, _cx: &mut Cx<State>) -> El {
     let p = palette();
@@ -18,7 +18,15 @@ pub(crate) fn view(s: &State, _cx: &mut Cx<State>) -> El {
         .motion(Spring::NONE)
         .child(search(s))
         .child(hairline())
-        .child(results(s));
+        .child(
+            row()
+                .w_full()
+                .grow(1.0)
+                .min_h(0.0)
+                .child(results(s))
+                .child(el().w(1.0).h_full().fill(p.line))
+                .child(crate::preview::panel(s)),
+        );
     if let Some(error) = &s.error {
         body = body.child(hairline()).child(
             row().w_full().px(18.0).py(8.0).role("alert").child(
@@ -94,15 +102,12 @@ fn search(s: &State) -> El {
 fn results(s: &State) -> El {
     let p = palette();
     let now = crate::history::now();
-    let mut list = col().key("results").w_full().padding(6.0);
+    let mut list = col().key("results").w(LIST_WIDTH).padding(6.0);
     for (position, &index) in s.results.iter().enumerate() {
         let game = &s.games[index];
         let clicked = game.clone();
         let selected = position == s.selected;
-        let store = match game.store {
-            StoreId::Steam => "Steam",
-            StoreId::Epic => "Epic",
-        };
+        let store = crate::preview::store_name(game.store);
         let details = details(game, now);
         let label = match &details {
             Some(details) => format!("Launch {} via {store}, {details}", game.title),
@@ -145,20 +150,7 @@ fn results(s: &State) -> El {
                         .grow(1.0)
                         .min_w(0.0),
                 )
-                .children(details.map(|details| {
-                    text(details)
-                        .key(format!("details-{index}"))
-                        .font(SMALL)
-                        .color(p.faint)
-                }))
-                // A fixed column keeps the details aligned whatever the store's name.
-                .child(
-                    text(store)
-                        .font(SMALL)
-                        .color(p.muted)
-                        .w(STORE_COLUMN)
-                        .align(Align::End),
-                )
+                .child(text(store).font(SMALL).color(p.muted))
                 .on_press_tx(move |state: &mut State, _| {
                     if !state.launching {
                         state.selected = position;
@@ -177,29 +169,16 @@ fn results(s: &State) -> El {
     .min_h(0.0)
 }
 
-/// "2 weeks ago · 48 h": when the game was last played and the store's recorded playtime.
+/// "2 weeks ago · 48 h": when the game was last played and the store's recorded playtime,
+/// read out with each row. The preview panel shows the same facts for the selected game.
 pub(crate) fn details(game: &SourceGame, now: u64) -> Option<String> {
+    use crate::preview::{ago, playtime};
     let played = game.last_played.map(|at| ago(now.saturating_sub(at)));
-    let time = game.playtime_minutes.map(|minutes| match minutes {
-        0..60 => format!("{minutes} min"),
-        _ => format!("{} h", (minutes + 30) / 60),
-    });
-    let parts: Vec<_> = played.into_iter().chain(time).collect();
+    let parts: Vec<_> = played
+        .into_iter()
+        .chain(game.playtime_minutes.map(playtime))
+        .collect();
     (!parts.is_empty()).then(|| parts.join(" · "))
-}
-
-fn ago(seconds: u64) -> String {
-    const DAY: u64 = 24 * 60 * 60;
-    let days = seconds / DAY;
-    let (n, unit) = match days {
-        0 => return "today".into(),
-        1 => return "yesterday".into(),
-        2..14 => (days, "day"),
-        14..60 => (days / 7, "week"),
-        60..730 => (days / 30, "month"),
-        _ => (days / 365, "year"),
-    };
-    format!("{n} {unit}s ago")
 }
 
 fn empty_state(s: &State) -> El {

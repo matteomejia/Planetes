@@ -28,6 +28,18 @@ pub struct SourceGame {
     /// Total playtime the store recorded, in minutes. Planetes doesn't track playtime itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub playtime_minutes: Option<u64>,
+    /// Wide key art the store keeps locally (Steam's library hero), about 3:1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hero_path: Option<PathBuf>,
+    /// The game's logo with a transparent background, drawn over the hero art.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub logo_path: Option<PathBuf>,
+    /// Where the store's own CDN serves key art the store doesn't keep locally (Epic). The
+    /// app downloads it once into its art cache, then uses it as `hero_path`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hero_url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub logo_url: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]

@@ -1,10 +1,12 @@
 #![cfg_attr(all(windows, not(test)), windows_subsystem = "windows")]
 
+mod art;
 mod background;
 mod fixtures;
 mod history;
 mod metrics;
 mod platform;
+mod preview;
 mod state;
 mod update;
 mod view;
@@ -25,14 +27,17 @@ fn on_key(s: &mut State, event: &KeyEvent, tx: &mut Tx) -> bool {
     true
 }
 
+/// Wide enough for the results list and the selected game's art beside it.
+pub(crate) const SIZE: (f32, f32) = (860.0, 520.0);
+
 fn spec() -> AppSpec<State> {
     AppSpec {
-        min_size: Some((420.0, 320.0)),
+        min_size: Some((720.0, 400.0)),
         on_key: Some(on_key),
         poll: Some(state::poll),
         setup: Some(state::setup),
         scenes: fixtures::SCENES,
-        ..AppSpec::new("Planetes", (580.0, 480.0), State::default, view::view)
+        ..AppSpec::new("Planetes", (SIZE.0, SIZE.1), State::default, view::view)
     }
 }
 

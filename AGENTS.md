@@ -21,10 +21,15 @@ easy installation, store coverage, launch reliability and speed rather than on s
 
 ## Decisions
 
-- **Minimal launcher:** open, search, select, launch, leave. A compact results list is the UI.
+- **Minimal launcher:** open, search, select, launch, leave. A compact results list is the UI, with a preview
+  panel beside it (860×520 window, user decision 2026-11-08): the selected game's local key art and logo, last
+  played and playtime.
 - **Quiet, non-generic design:** neutral greys, one blue accent (caret, focus, selection), dense single-line rows
-  with store labels, plain status line, no gradients/glows/keycaps, no title bar. Bundled Rune font for now.
-  Acrylic is deferred. Verify visual changes on Windows.
+  with store labels, plain status line, no decorative gradients/glows/keycaps, no title bar. The art's fade into
+  the panel is the only gradient. Bundled Rune font for now. Acrylic is deferred. Verify visual changes on Windows.
+- **Art:** Steam's own `appcache/librarycache` files. Epic art is downloaded once from Epic's HTTPS CDN using the
+  links in its local `catcache.bin` (user decision 2026-11-08), into `%LOCALAPPDATA%\Planetes\art`;
+  `"download_art": false` stops it. No third-party art services. Without art, a game shows its icon blurred.
 - **Defer library-browser features:** cover grids, detail pages, collections and playtime tracking.
 - **Windows only for now.** macOS was dropped on 2026-11-08 (no releases, no CI check). Shared crates may keep
   existing portable code, but nothing needs to compile elsewhere.

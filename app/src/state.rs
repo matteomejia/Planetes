@@ -36,6 +36,11 @@ pub(crate) struct State {
     pub focused: bool,
     /// A downloaded update, applied the next time the launcher hides.
     pub pending_update: Option<crate::update::Pending>,
+    /// Art requested for the selected game, and the art on screen until that decodes.
+    pub preview: Option<crate::preview::Preview>,
+    pub shown: Option<crate::preview::Preview>,
+    /// Art URLs already requested this session.
+    pub art_tried: std::collections::HashSet<String>,
 }
 
 impl Default for State {
@@ -65,6 +70,9 @@ impl Default for State {
             last_scan: None,
             focused: false,
             pending_update: None,
+            preview: None,
+            shown: None,
+            art_tried: Default::default(),
         }
     }
 }
@@ -90,6 +98,9 @@ impl State {
             self.selected = position;
         }
         self.load_icons();
+        if let Some(handle) = self.handle.clone() {
+            crate::art::fetch_missing(handle, &self.games, &mut self.art_tried);
+        }
     }
 
     fn selected_game(&self) -> Option<&SourceGame> {
@@ -245,6 +256,7 @@ impl State {
         std::thread::spawn(move || {
             let mut report = planetes_stores::scan(&Default::default());
             crate::history::merge(&mut report.games);
+            crate::art::attach_cached(&mut report.games);
             handle.update(move |state, tx| {
                 state.apply_report(report);
                 tx.instant();
@@ -279,6 +291,10 @@ impl State {
 pub(crate) fn setup(state: &mut State, waker: rune::Waker) {
     state.image_cache = Some(rune::ImageCache::new(waker));
     state.load_icons();
+    // Scenes are set before the cache exists; let snapshots show their art.
+    if rune::tooling::headless_run().is_some() {
+        crate::preview::settle(state);
+    }
 }
 
 pub(crate) fn poll(state: &mut State, _: f64, tx: &mut Tx) -> bool {
@@ -289,7 +305,8 @@ pub(crate) fn poll(state: &mut State, _: f64, tx: &mut Tx) -> bool {
         .values()
         .filter(|image| image.is_ready())
         .count();
-    let changed = ready != state.icons_ready;
+    let art = crate::preview::poll(state);
+    let changed = ready != state.icons_ready || art;
     state.icons_ready = ready;
     let Some(handle) = state.handle.clone() else {
         return changed;
