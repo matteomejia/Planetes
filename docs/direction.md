@@ -12,8 +12,8 @@ Palette extension** over the same scanner. The main competitor is [Ludex](https:
 (MIT, C#; Steam, GOG, Epic and Xbox for Flow Launcher, Raycast and a source-only Command Palette build, with a
 save-folder focus). Planetes competes on easy installation, store coverage, launch reliability and speed.
 
-v0.1.0, with background mode and Steam and Epic support, was released on 2026-11-08 (the repository is still
-private). Agreed v1.0 scope, delivered incrementally:
+v0.1.0, with background mode and Steam and Epic support, was released on 2026-11-08. v0.2.0 adds the Velopack
+installer and automatic updates. Agreed v1.0 scope, delivered incrementally:
 
 1. **Background mode (implemented 2026-11-07):** Planetes stays resident and a global hotkey summons it. The hotkey is configurable;
    Alt+Space is the default. The window hides when it loses focus or after a launch, a tray icon offers rescan,

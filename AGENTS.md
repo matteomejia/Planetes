@@ -35,7 +35,7 @@ easy installation, store coverage, launch reliability and speed rather than on s
 ## Next steps
 
 1. v0.1.0 (background mode, Steam and Epic) was published on 2026-11-08 after the user tested it, tray menu
-   included. Default hotkey Alt+Space; PowerToys holds it on this desktop, so the user sets another. Next: more
+   included; v0.2.0 adds the Velopack installer and self-updates. Default hotkey Alt+Space; PowerToys holds it on this desktop, so the user sets another. Next: more
    stores (GOG first). v1.0 scope is in `docs/direction.md`. The repo is public (made so 2026-11-08); draft each
    release and publish only with the owner's approval. See `docs/releasing.md`.
 2. Release startup/search have been measured with the opt-in native benchmark; avoid adding caching without evidence.

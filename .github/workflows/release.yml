@@ -3,9 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version matching Cargo.toml (for example 0.1.0)'
+        description: 'Version matching Cargo.toml (for example 0.2.0)'
         required: true
-        default: '0.1.0'
 permissions:
   contents: read
 jobs:

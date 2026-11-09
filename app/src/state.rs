@@ -99,6 +99,11 @@ impl State {
     /// Start background services once the app host runs: hotkey, settings watcher, first scan.
     pub fn start(&mut self) {
         if self.resident {
+            // Point an existing Start with Windows entry at this copy, so it survives moving
+            // from a v0.1 portable folder to the installed app.
+            if crate::platform::autostart_enabled() {
+                let _ = crate::platform::set_autostart(true);
+            }
             self.apply_settings();
             if let Some(handle) = self.handle.clone() {
                 crate::background::watch_settings(handle.clone());
