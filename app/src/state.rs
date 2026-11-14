@@ -32,7 +32,7 @@ pub(crate) struct State {
     pub tray: Option<rune::Tray>,
     pub last_scan: Option<Instant>,
     /// Whether the window has had focus since it was last shown. Only losing focus it had
-    /// hides it: Windows may show a launched window without focus, and that is no click-away.
+    /// hides it: the OS may show a launched window without focus, and that is no click-away.
     pub focused: bool,
     /// A downloaded update, applied the next time the launcher hides.
     pub pending_update: Option<crate::update::Pending>,
@@ -110,7 +110,7 @@ impl State {
     /// Start background services once the app host runs: hotkey, settings watcher, first scan.
     pub fn start(&mut self) {
         if self.resident {
-            // Point an existing Start with Windows entry at this copy, so it survives moving
+            // Point an existing start-at-sign-in entry at this copy, so it survives moving
             // from a v0.1 portable folder to the installed app.
             if crate::platform::autostart_enabled() {
                 let _ = crate::platform::set_autostart(true);
@@ -129,7 +129,7 @@ impl State {
         let Some(handle) = self.handle.clone() else {
             return;
         };
-        crate::platform::place_for_summon();
+        crate::platform::place_for_summon(&handle);
         self.focused = false;
         handle.open();
         if self.last_scan.is_none_or(|at| at.elapsed() >= RESCAN_AFTER) {

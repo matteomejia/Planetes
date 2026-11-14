@@ -10,8 +10,13 @@ use std::{
 
 pub const DEFAULT_HOTKEY: &str = "alt+space";
 
-/// `%APPDATA%\Planetes\settings.json` on Windows.
+/// `%APPDATA%\Planetes\settings.json` on Windows, `~/Library/Application Support/Planetes/`
+/// on macOS.
 pub fn settings_path() -> Option<PathBuf> {
+    #[cfg(target_os = "macos")]
+    let base = std::env::var_os("HOME")
+        .map(|home| PathBuf::from(home).join("Library/Application Support"))?;
+    #[cfg(not(target_os = "macos"))]
     let base = std::env::var_os("APPDATA")
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))?;
@@ -149,10 +154,11 @@ impl State {
 }
 
 fn menu() -> Vec<TrayItem> {
+    let label = platform::AUTOSTART_LABEL;
     let autostart = if platform::autostart_enabled() {
-        "✓ Start with Windows"
+        format!("✓ {label}")
     } else {
-        "Start with Windows"
+        label.to_owned()
     };
     vec![
         TrayItem::action("open", "Open Planetes"),
@@ -165,8 +171,8 @@ fn menu() -> Vec<TrayItem> {
     ]
 }
 
-/// Create the settings file with its defaults if needed, then open it in Notepad, which every
-/// Windows install has, rather than whatever `.json` happens to be associated with.
+/// Create the settings file with its defaults if needed, then open it in a plain text editor
+/// (Notepad, or the default one on macOS) rather than whatever `.json` is associated with.
 fn open_settings() {
     let Some(path) = settings_path() else {
         return;
@@ -178,6 +184,12 @@ fn open_settings() {
         let defaults = format!("{{\n  \"hotkey\": \"{DEFAULT_HOTKEY}\"\n}}\n");
         let _ = std::fs::write(&path, defaults);
     }
+    #[cfg(target_os = "macos")]
+    let _ = std::process::Command::new("/usr/bin/open")
+        .arg("-t")
+        .arg(&path)
+        .spawn();
+    #[cfg(not(target_os = "macos"))]
     let _ = std::process::Command::new("notepad.exe").arg(&path).spawn();
 }
 

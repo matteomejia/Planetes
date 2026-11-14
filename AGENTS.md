@@ -31,8 +31,10 @@ easy installation, store coverage, launch reliability and speed rather than on s
   links in its local `catcache.bin` (user decision 2026-11-08), into `%LOCALAPPDATA%\Planetes\art`;
   `"download_art": false` stops it. No third-party art services. Without art, a game shows its icon blurred.
 - **Defer library-browser features:** cover grids, detail pages, collections and playtime tracking.
-- **Windows only for now.** macOS was dropped on 2026-11-08 (no releases, no CI check). Shared crates may keep
-  existing portable code, but nothing needs to compile elsewhere.
+- **Windows first, macOS with Steam.** macOS was dropped on 2026-11-08 and brought back on 2026-11-13 (user
+  decision): the same Rune UI as Windows, no macOS-only UI (Liquid Glass deferred), Steam only for now, run from
+  source (no packaged release or self-updates yet). CI checks it on `macos-latest`. Platform code lives in
+  `app/src/platform.rs` behind `cfg`; keep both platforms compiling.
 - **Installed games only**: no store logins or ownership APIs.
 - **No controller/gamepad support yet.**
 - **No required API keys.** Artwork services, including optional SteamGridDB, and IGDB are deferred.

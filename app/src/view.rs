@@ -186,7 +186,10 @@ fn empty_state(s: &State) -> El {
     let message = if s.loading {
         "Scanning installed games…".to_string()
     } else if s.games.is_empty() {
-        "No installed Steam or Epic games found. Install one, then press Ctrl+R.".to_string()
+        format!(
+            "No installed {} games found. Install one, then press {}.",
+            STORES, RESCAN_KEY
+        )
     } else {
         format!("No installed games match “{}”.", s.query.text.trim())
     };
@@ -227,7 +230,7 @@ fn status(s: &State) -> El {
                 .min_w(0.0),
         );
     }
-    let rescan = hint("Ctrl+R", "rescan")
+    let rescan = hint(RESCAN_KEY, "rescan")
         .key("refresh")
         .px(4.0)
         .h(22.0)
@@ -252,6 +255,17 @@ fn status(s: &State) -> El {
         .child(rescan)
         .child(hint("Esc", "close"))
 }
+
+/// Rune's `Key::Command('r')` is Command on macOS and Ctrl elsewhere.
+#[cfg(target_os = "macos")]
+const RESCAN_KEY: &str = "⌘R";
+#[cfg(not(target_os = "macos"))]
+const RESCAN_KEY: &str = "Ctrl+R";
+/// Epic isn't scanned on macOS yet.
+#[cfg(target_os = "macos")]
+const STORES: &str = "Steam";
+#[cfg(not(target_os = "macos"))]
+const STORES: &str = "Steam or Epic";
 
 fn hint(key: &str, action: &str) -> El {
     let p = palette();

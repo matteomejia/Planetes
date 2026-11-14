@@ -18,8 +18,11 @@ const LOGO_WIDTH: u32 = 640;
 const MAX_BYTES: u64 = 8 * 1024 * 1024;
 
 fn dir() -> Option<PathBuf> {
-    let base = std::env::var_os("LOCALAPPDATA")?;
-    Some(Path::new(&base).join("Planetes").join("art"))
+    #[cfg(target_os = "macos")]
+    let base = Path::new(&std::env::var_os("HOME")?).join("Library/Caches");
+    #[cfg(not(target_os = "macos"))]
+    let base = PathBuf::from(std::env::var_os("LOCALAPPDATA")?);
+    Some(base.join("Planetes").join("art"))
 }
 
 /// A stable file name per URL (FNV-1a), so a changed image on the CDN is a new file.

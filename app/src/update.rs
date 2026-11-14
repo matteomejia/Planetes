@@ -15,12 +15,14 @@ const CHECK_EVERY: Duration = Duration::from_secs(24 * 60 * 60);
 /// Velopack's install, update and uninstall hooks. Runs first in `main`: during those steps it
 /// may handle the call and exit, and at start-up it applies an update already downloaded.
 pub fn startup() {
-    VelopackApp::build()
-        // The Run value would otherwise point at the removed executable.
-        .on_before_uninstall_fast_callback(|_| {
-            let _ = crate::platform::set_autostart(false);
-        })
-        .run();
+    let app = VelopackApp::build();
+    // The Run value would otherwise point at the removed executable.
+    #[cfg(windows)]
+    let app = app.on_before_uninstall_fast_callback(|_| {
+        let _ = crate::platform::set_autostart(false);
+    });
+    let mut app = app;
+    app.run();
 }
 
 /// An update downloaded and ready to apply.

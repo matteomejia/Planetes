@@ -1,5 +1,6 @@
 /// Native setup for the frameless launcher window, each time Rune creates it: icon, rounded
-/// corners, system shadow and a centred position on the monitor under the pointer.
+/// corners, system shadow and a centred position on the monitor under the pointer. macOS gets
+/// its corners and shadow from Rune's window options in `main`.
 #[cfg(windows)]
 pub(crate) fn setup_window(window: &rune::WindowHandle) {
     use raw_window_handle::RawWindowHandle;
@@ -125,7 +126,7 @@ static WINDOW: std::sync::atomic::AtomicIsize = std::sync::atomic::AtomicIsize::
 
 /// Move the (usually hidden) window to the monitor under the pointer before it is shown.
 #[cfg(windows)]
-pub(crate) fn place_for_summon() {
+pub(crate) fn place_for_summon(_: &rune::AppHandle<crate::state::State>) {
     let hwnd = WINDOW.load(std::sync::atomic::Ordering::Acquire);
     if hwnd != 0 {
         // SAFETY: the handle was recorded from Rune's live window on this (the app) thread;
@@ -134,8 +135,29 @@ pub(crate) fn place_for_summon() {
     }
 }
 
-#[cfg(not(windows))]
-pub(crate) fn place_for_summon() {}
+/// Centred near the top of the display under the pointer, as Spotlight sits.
+#[cfg(target_os = "macos")]
+pub(crate) fn place_for_summon(handle: &rune::AppHandle<crate::state::State>) {
+    use rune::{Align, DisplayTarget, OverlayPlacement, ScreenEdge};
+    handle.place(
+        DisplayTarget::UnderPointer,
+        OverlayPlacement::Edge {
+            edge: ScreenEdge::Top,
+            margin: 140.0,
+            align: Align::Center,
+            inset: 0.0,
+        },
+    );
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
+pub(crate) fn place_for_summon(_: &rune::AppHandle<crate::state::State>) {}
+
+/// The tray menu's name for starting at sign-in.
+#[cfg(target_os = "macos")]
+pub(crate) const AUTOSTART_LABEL: &str = "Open at Login";
+#[cfg(not(target_os = "macos"))]
+pub(crate) const AUTOSTART_LABEL: &str = "Start with Windows";
 
 #[cfg(windows)]
 mod autostart {
@@ -208,11 +230,84 @@ pub(crate) fn autostart_enabled() -> bool {
 pub(crate) fn set_autostart(on: bool) -> Result<(), String> {
     autostart::set(on)
 }
-#[cfg(not(windows))]
+/// A per-user LaunchAgent that starts this executable hidden (`--background`) at login.
+#[cfg(target_os = "macos")]
+mod autostart {
+    use std::path::PathBuf;
+    const LABEL: &str = "io.github.matteomejia.planetes";
+
+    fn plist() -> Option<PathBuf> {
+        let home = std::env::var_os("HOME")?;
+        Some(
+            PathBuf::from(home)
+                .join("Library/LaunchAgents")
+                .join(format!("{LABEL}.plist")),
+        )
+    }
+
+    fn escape(text: &str) -> String {
+        text.replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+    }
+
+    pub fn enabled() -> bool {
+        plist().is_some_and(|path| path.is_file())
+    }
+
+    pub fn set(on: bool) -> Result<(), String> {
+        let path = plist().ok_or("No home folder for the login item.")?;
+        if !on {
+            return match std::fs::remove_file(&path) {
+                Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+                    Err(format!("Could not remove the login item: {error}."))
+                }
+                _ => Ok(()),
+            };
+        }
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let exe = escape(&exe.to_string_lossy());
+        let contents = format!(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>{LABEL}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{exe}</string>
+    <string>--background</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>ProcessType</key>
+  <string>Interactive</string>
+</dict>
+</plist>
+"#
+        );
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+        }
+        std::fs::write(&path, contents)
+            .map_err(|error| format!("Could not add the login item: {error}."))
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn autostart_enabled() -> bool {
+    autostart::enabled()
+}
+#[cfg(target_os = "macos")]
+pub(crate) fn set_autostart(on: bool) -> Result<(), String> {
+    autostart::set(on)
+}
+#[cfg(not(any(windows, target_os = "macos")))]
 pub(crate) fn autostart_enabled() -> bool {
     false
 }
-#[cfg(not(windows))]
+#[cfg(not(any(windows, target_os = "macos")))]
 pub(crate) fn set_autostart(_: bool) -> Result<(), String> {
-    Err("Starting with the system is only supported on Windows.".into())
+    Err("Starting with the system is only supported on Windows and macOS.".into())
 }

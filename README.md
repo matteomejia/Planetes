@@ -1,7 +1,7 @@
 # Planetes
 
 A minimal launcher for your installed games, built in Rust with [Rune](https://github.com/anomalyco/rune).
-Open, search, select and launch through the game's store. Windows first, with portable shared logic.
+Open, search, select and launch through the game's store. Windows first; macOS (Steam only) runs from source.
 
 ## Windows download
 
@@ -105,9 +105,26 @@ protocol associations and uses ShellExecuteExW without a command shell.
   Install directories must exist. `LauncherInstalled.dat` was verified locally but is not needed as a second source.
 - Malformed manifests, inaccessible libraries and missing install directories become warnings; other entries survive.
   A missing default Epic directory is normal. Failed Steam discovery and missing explicit paths produce warnings.
-- Planetes supports Windows only for now.
+- Planetes supports Windows, and macOS from source with Steam only. The macOS scan reads the same Steam
+  files (`~/Library/Application Support/Steam`); Epic isn't scanned there yet.
 - Fixtures use synthetic identities and temporary directories, with the structure of real manifests. Live scans and
   raw machine manifests stay outside tracked files.
+
+## macOS (from source)
+
+The macOS build is the same launcher: Steam games, the same window and keys, background mode with a menu-bar icon
+and no Dock icon. It needs Rust via rustup and the Xcode command-line tools; there is no packaged release yet.
+
+```sh
+cargo run --locked --release
+```
+
+The default hotkey is Option+Space and ⌘R rescans. The launcher opens near the top of the display under the
+pointer and hides on Escape, the hotkey or a click away. Settings live in
+`~/Library/Application Support/Planetes/settings.json`; *Edit settings…* opens it in TextEdit. *Open at Login* in
+the menu-bar menu adds a LaunchAgent (`~/Library/LaunchAgents/io.github.matteomejia.planetes.plist`) that starts
+this executable hidden. Self-updates are Windows only. A second copy started from the terminal doesn't hand over
+to the running one, as it does on Windows; use the hotkey or the menu-bar icon.
 
 ## Docs
 

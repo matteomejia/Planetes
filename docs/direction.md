@@ -3,7 +3,8 @@
 ## Purpose
 
 A minimal, fast game launcher. Open it, find an installed game, launch it, and return to playing.
-The user should spend only a few seconds in Planetes. Windows only for now; macOS support was dropped on 2026-11-08.
+The user should spend only a few seconds in Planetes. Windows first. macOS was dropped on 2026-11-08 and brought back on 2026-11-13 at the user's request: the same
+Rune launcher, Steam only to start, run from source until it is packaged.
 
 ## Goal and roadmap
 
@@ -100,7 +101,8 @@ launch handling needs tests for correct arguments and errors without launching g
 ## Decisions
 
 - **Minimal quick launcher:** search, select, launch, leave. Updated after the Windows scanner spike on 2026-11-07.
-- **Windows first**, while preserving portability in shared crates.
+- **Windows first; macOS with Steam** (user decision 2026-11-13): the same UI as Windows, no macOS-only UI such
+  as Liquid Glass for now. Other stores on macOS come later.
 - **Installed-only, no accounts or required API keys.** IGDB and optional SteamGridDB enrichment are deferred.
 - **Rust + Rune**, with the framework revision pinned in the workspace.
 - **MIT license.** Reused MIT code retains its notices. Do not copy GPL implementation code.

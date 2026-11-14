@@ -7,6 +7,18 @@ on:
 permissions:
   contents: read
 jobs:
+  macos:
+    name: macOS tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo test --locked --workspace
+      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
   windows:
     name: Windows tests and portable package
     runs-on: windows-latest
